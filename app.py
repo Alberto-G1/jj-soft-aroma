@@ -7,6 +7,9 @@ import bcrypt
 import logging
 import os
 
+import cloudinary
+import cloudinary.uploader
+
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -15,6 +18,14 @@ app.jinja_env.cache = {}
 
 db.init_app(app)
 csrf = CSRFProtect(app)
+
+
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+    secure=True
+)
 
 login_manager = LoginManager()
 login_manager.init_app(app)

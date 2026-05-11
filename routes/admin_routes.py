@@ -6,6 +6,8 @@ import os
 import logging
 from werkzeug.utils import secure_filename
 import uuid
+import cloudinary
+import cloudinary.uploader
 
 logger = logging.getLogger(__name__)
 
@@ -16,30 +18,26 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_file(file, folder='images'):
-    """Save uploaded file to the appropriate folder and return relative path from static folder"""
+    """Upload file to Cloudinary and return image URL"""
     try:
         # Validate file
         if not file or not allowed_file(file.filename):
             return None
-        
-        # Generate unique filename
-        ext      = file.filename.rsplit('.', 1)[1].lower()
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        
-        # Ensure folder directory exists
-        folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder)
-        os.makedirs(folder_path, exist_ok=True)
-        
-        # Save file to subdirectory
-        file_path = os.path.join(folder_path, filename)
-        file.save(file_path)
-        
-        # Return relative path from static folder
-        return f"images/{folder}/{filename}"
-    except Exception as e:
-        logger.error(f"Error saving file: {e}")
-        return None
 
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            file,
+            folder=f"jj-soft-aroma/{folder}"
+        )
+
+        # Return secure Cloudinary URL
+        return upload_result.get("secure_url")
+
+    except Exception as e:
+        logger.error(f"Cloudinary upload error: {e}")
+        return None
+    
+    
 # ─── AUTH ───────────────────────────────────────────────
 @admin_bp.route('/login', methods=['GET', 'POST'])
 def login():
