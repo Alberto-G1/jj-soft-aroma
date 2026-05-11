@@ -1,0 +1,144 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Settings — J&J Admin{% endblock %}
+{% block page_title %}Settings <span style="color:var(--gold);">&amp; Preferences</span>{% endblock %}
+
+{% block content %}
+<div class="stabs-wrap">
+  <button class="stab active" onclick="settingsTab(this,'pStore')"><i class="bi bi-shop"></i> Store</button>
+  <button class="stab" onclick="settingsTab(this,'pNotif')"><i class="bi bi-bell"></i> Notifications</button>
+  <button class="stab" onclick="settingsTab(this,'pSec')"><i class="bi bi-lock"></i> Security</button>
+  <button class="stab" onclick="settingsTab(this,'pSys')"><i class="bi bi-info-circle"></i> System</button>
+</div>
+
+<!-- STORE -->
+<div class="settings-panel" id="pStore">
+<div class="scard">
+  <div class="scard-head"><div class="scard-icon si-sky"><i class="bi bi-shop"></i></div><div><h3>Store Details</h3><p>Basic info visible to customers</p></div></div>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="store">
+    <div class="sfields">
+      <div class="sf-full"><label class="slbl">Store Name</label><div class="sinput-w"><i class="bi bi-shop sf-ico"></i><input class="sinput" name="store_name" value="{{ store.store_name }}"></div></div>
+      <div class="sf-row">
+        <div><label class="slbl">Phone</label><div class="sinput-w"><i class="bi bi-telephone sf-ico"></i><input class="sinput" name="phone" value="{{ store.phone }}"></div></div>
+        <div><label class="slbl">Currency</label><div class="sinput-w"><i class="bi bi-currency-exchange sf-ico"></i><select class="sinput ssel" name="currency"><option value="UGX" {% if store.currency=='UGX' %}selected{% endif %}>UGX</option><option value="USD" {% if store.currency=='USD' %}selected{% endif %}>USD</option><option value="KES" {% if store.currency=='KES' %}selected{% endif %}>KES</option></select></div></div>
+      </div>
+      <div class="sf-full"><label class="slbl">Email</label><div class="sinput-w"><i class="bi bi-envelope sf-ico"></i><input class="sinput" type="email" name="email" value="{{ store.email }}"></div><span class="shint">Contact emails forwarded here</span></div>
+      <div class="sf-full"><label class="slbl">Address</label><div class="sinput-w"><i class="bi bi-geo-alt sf-ico"></i><input class="sinput" name="address" value="{{ store.address }}"></div></div>
+      <div class="sf-full"><label class="slbl">Free Delivery Threshold (UGX)</label><div class="sinput-w"><i class="bi bi-truck sf-ico"></i><input class="sinput" type="number" name="free_delivery_threshold" value="{{ store.free_delivery_threshold|int }}"></div></div>
+    </div>
+    <div class="ssave"><button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Store Settings</button></div>
+  </form>
+</div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="settings-panel" id="pNotif" style="display:none;">
+<div class="scard">
+  <div class="scard-head"><div class="scard-icon si-green"><i class="bi bi-bell-fill"></i></div><div><h3>SMS Notifications</h3><p>Get instant SMS alerts on new orders</p></div></div>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="store">
+    <input type="hidden" name="store_name" value="{{ store.store_name }}">
+    <input type="hidden" name="phone" value="{{ store.phone }}">
+    <input type="hidden" name="email" value="{{ store.email }}">
+    <input type="hidden" name="address" value="{{ store.address }}">
+    <input type="hidden" name="currency" value="{{ store.currency }}">
+    <input type="hidden" name="free_delivery_threshold" value="{{ store.free_delivery_threshold|int }}">
+    <div class="stoggle-row">
+      <div><div class="stoggle-title"><i class="bi bi-phone" style="color:var(--green);"></i> SMS on new orders</div><div class="stoggle-desc">Receive an SMS when a new order is placed</div></div>
+      <div class="toggle-switch {% if store.sms_notifications %}on{% endif %}" id="smsToggle" onclick="this.classList.toggle('on');document.getElementById('smsH').value=this.classList.contains('on')?'1':'0';"></div>
+      <input type="hidden" name="sms_notifications" id="smsH" value="{% if store.sms_notifications %}1{% else %}0{% endif %}">
+    </div>
+    <div class="sfields" style="margin-top:18px;">
+      <div class="sf-full"><label class="slbl">Notify Phone</label><div class="sinput-w"><i class="bi bi-phone sf-ico"></i><input class="sinput" name="notify_phone" value="{{ store.notify_phone }}" placeholder="e.g. 0763085855"></div><span class="shint">SMS alerts sent to this number</span></div>
+    </div>
+    <div class="ssave"><button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save</button></div>
+  </form>
+</div>
+</div>
+
+<!-- SECURITY -->
+<div class="settings-panel" id="pSec" style="display:none;">
+<div class="scard">
+  <div class="scard-head"><div class="scard-icon si-red"><i class="bi bi-lock-fill"></i></div><div><h3>Admin Security</h3><p>Change your password</p></div></div>
+  <div class="saccount"><div class="savatar">{{ current_user.username[0].upper() }}</div><div><div class="saname">{{ current_user.username }}</div><div class="sarole">Administrator · Since {{ current_user.created_at.strftime('%b %Y') }}</div></div></div>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="password">
+    <div class="sfields">
+      <div class="sf-full"><label class="slbl">New Password</label><div class="sinput-w spw"><i class="bi bi-lock sf-ico"></i><input class="sinput" type="password" name="new_password" id="nPF" placeholder="Leave blank to keep current"><button type="button" class="pw-eye" onclick="tPW('nPF','nEI')"><i class="bi bi-eye" id="nEI"></i></button></div></div>
+      <div class="sf-full"><label class="slbl">Confirm Password</label><div class="sinput-w spw"><i class="bi bi-lock-fill sf-ico"></i><input class="sinput" type="password" name="confirm_password" id="cPF" placeholder="Repeat password"><button type="button" class="pw-eye" onclick="tPW('cPF','cEI')"><i class="bi bi-eye" id="cEI"></i></button></div></div>
+    </div>
+    <div class="ssave"><button type="submit" class="btn btn-danger"><i class="bi bi-shield-lock"></i> Update Password</button></div>
+  </form>
+</div>
+</div>
+
+<!-- SYSTEM -->
+<div class="settings-panel" id="pSys" style="display:none;">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+  <div class="scard">
+    <div class="scard-head"><div class="scard-icon si-sky"><i class="bi bi-cpu"></i></div><div><h3>System Info</h3><p>Technical details</p></div></div>
+    <div class="sinfo-grid">
+      <div class="sinfo-r"><span>Flask</span><strong>3.0.0</strong></div>
+      <div class="sinfo-r"><span>Database</span><strong>MySQL 8.0</strong></div>
+      <div class="sinfo-r"><span>Admin Since</span><strong>{{ current_user.created_at.strftime('%d %b %Y') }}</strong></div>
+      <div class="sinfo-r"><span>Built by</span><strong style="color:var(--gold);">GGT</strong></div>
+    </div>
+  </div>
+  <div class="scard">
+    <div class="scard-head"><div class="scard-icon si-gold"><i class="bi bi-envelope-open-fill"></i></div><div><h3>Email Activity</h3><p>Contact form stats</p></div></div>
+    <div class="sinfo-grid">
+      <div class="sinfo-r"><span>Total</span><strong>{{ contact_email_count }}</strong></div>
+      <div class="sinfo-r"><span>Sent</span><strong style="color:var(--green);">{{ contact_sent_count }}</strong></div>
+      <div class="sinfo-r"><span>Failed</span><strong style="color:#ef5350;">{{ contact_failed_count }}</strong></div>
+      <div class="sinfo-r"><span>To</span><strong>{{ store.email or '—' }}</strong></div>
+    </div>
+    {% if recent_contact_messages %}
+    <div style="margin-top:16px;font-size:11px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Recent</div>
+    {% for item in recent_contact_messages %}
+    <div class="smsg"><div style="display:flex;justify-content:space-between;"><strong style="font-size:12px;color:var(--text-primary);">{{ item.name }}</strong><span class="sbdg {% if item.delivery_status=='sent' %}bg{% elif item.delivery_status=='failed' %}br{% else %}by{% endif %}">{{ item.delivery_status }}</span></div><div style="font-size:11px;color:var(--text-muted);">{{ item.subject }}</div></div>
+    {% endfor %}
+    {% endif %}
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function tPW(f,i){var e=document.getElementById(f),c=document.getElementById(i);if(!e)return;if(e.type==='password'){e.type='text';c.classList.replace('bi-eye','bi-eye-slash');}else{e.type='password';c.classList.replace('bi-eye-slash','bi-eye');}}
+</script>
+<style>
+.stabs-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:8px;background:rgba(255,255,255,.06);border:1px solid rgba(168,216,234,.14);border-radius:20px;backdrop-filter:blur(14px)}
+.stab{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:14px;border:1px solid transparent;background:0;color:var(--text-muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.22s}
+.stab:hover{background:rgba(168,216,234,.12);color:var(--text-primary)}
+.stab.active{background:linear-gradient(135deg,rgba(168,216,234,.28),rgba(232,184,109,.18));border-color:rgba(168,216,234,.3);color:var(--text-primary);box-shadow:0 4px 16px rgba(44,95,122,.15)}
+.scard{background:rgba(255,255,255,.07);border:1px solid rgba(168,216,234,.16);border-radius:26px;padding:28px;box-shadow:0 16px 48px rgba(0,0,0,.2);backdrop-filter:blur(16px);margin-bottom:20px}
+.scard-head{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(168,216,234,.14)}
+.scard-icon{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.si-sky{background:rgba(168,216,234,.2);color:var(--sky)}.si-green{background:rgba(90,170,114,.2);color:var(--green)}.si-red{background:rgba(239,83,80,.15);color:#ef5350}.si-gold{background:rgba(232,184,109,.18);color:var(--gold)}
+.scard-head h3{margin:0 0 3px;font-size:16px;color:var(--text-primary)}.scard-head p{margin:0;font-size:12px;color:var(--text-muted)}
+.sfields{display:flex;flex-direction:column;gap:16px}.sf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.sf-full{}
+.slbl{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px}
+.sinput-w{position:relative;display:flex;align-items:center}
+.sf-ico{position:absolute;left:14px;color:var(--text-muted);font-size:.9rem;pointer-events:none;z-index:1}
+.sinput{width:100%;padding:12px 14px 12px 42px;background:rgba(255,255,255,.92)!important;border:2px solid rgba(168,216,234,.4)!important;border-radius:14px!important;font-family:'Poppins',sans-serif;font-size:13.5px;color:#0d2d3e!important;outline:0;transition:.2s;min-height:48px}
+.sinput:focus{border-color:var(--sky)!important;box-shadow:0 0 0 4px rgba(168,216,234,.2)}
+.ssel{cursor:pointer;appearance:none;padding-right:36px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b9aad' d='M6 8L1 3h10z'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important}
+.shint{display:block;font-size:11px;color:var(--text-muted);margin-top:5px}
+.ssave{margin-top:22px;padding-top:18px;border-top:1px solid rgba(168,216,234,.12);display:flex;justify-content:flex-end}
+.stoggle-row{display:flex;align-items:center;gap:16px;padding:16px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(168,216,234,.14);border-radius:16px}
+.stoggle-row>div:first-child{flex:1}.stoggle-title{font-weight:700;font-size:14px;color:var(--text-primary);display:flex;align-items:center;gap:8px}.stoggle-desc{font-size:12px;color:var(--text-muted)}
+.saccount{display:flex;align-items:center;gap:16px;padding:14px 18px;background:rgba(255,255,255,.05);border:1px solid rgba(168,216,234,.14);border-radius:16px;margin-bottom:22px}
+.savatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff;flex-shrink:0}
+.saname{font-size:15px;font-weight:700;color:var(--text-primary)}.sarole{font-size:12px;color:var(--text-muted);margin-top:2px}
+.spw .sinput{padding-right:48px}.pw-eye{position:absolute;right:12px;background:0;border:0;color:var(--text-muted);font-size:1rem;cursor:pointer;padding:4px;z-index:2}.pw-eye:hover{color:var(--navy)}
+.sinfo-grid{display:flex;flex-direction:column;border:1px solid rgba(168,216,234,.14);border-radius:14px;overflow:hidden}
+.sinfo-r{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;font-size:13px;border-bottom:1px solid rgba(168,216,234,.1)}.sinfo-r:last-child{border:0}.sinfo-r span{color:var(--text-muted)}.sinfo-r strong{color:var(--text-primary)}
+.smsg{padding:10px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(168,216,234,.12);border-radius:10px;margin-bottom:8px}
+.sbdg{font-size:10px;font-weight:800;text-transform:uppercase;padding:2px 8px;border-radius:99px}.bg{background:rgba(90,170,114,.2);color:var(--green)}.br{background:rgba(239,83,80,.15);color:#ef5350}.by{background:rgba(232,184,109,.18);color:var(--gold)}
+@media(max-width:768px){.sf-row{grid-template-columns:1fr}#pSys>div{grid-template-columns:1fr!important}.stabs-wrap{flex-direction:column}.stab{justify-content:flex-start}}
+</style>
+{% endblock %}

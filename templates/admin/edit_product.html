@@ -1,0 +1,72 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Edit Product — J&J Admin{% endblock %}
+{% block page_title %}Edit <span style="color:var(--gold);">Product</span>{% endblock %}
+
+{% block content %}
+<div class="admin-form-page">
+  <div class="scard">
+    <div class="scard-head">
+      <div class="scard-icon si-gold"><i class="bi bi-pencil-square"></i></div>
+      <div><h3>{{ product.name }}</h3><p>Update product details, pricing, stock and images</p></div>
+      <a href="{{ url_for('admin.products') }}" class="btn btn-ghost btn-sm" style="margin-left:auto;"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="sfields">
+        <div class="sf-full"><label class="slbl"><i class="bi bi-tag" style="color:var(--sky);"></i> Product Name *</label><div class="sinput-w"><i class="bi bi-box-seam sf-ico"></i><input type="text" name="name" class="sinput" value="{{ product.name }}" required></div></div>
+        <div class="sf-row">
+          <div><label class="slbl"><i class="bi bi-tags" style="color:var(--green);"></i> Category</label><div class="sinput-w"><i class="bi bi-tags sf-ico"></i><select name="category_id" class="sinput ssel"><option value="">— None —</option>{% for cat in categories %}<option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}</select></div></div>
+          <div><label class="slbl"><i class="bi bi-cash" style="color:var(--gold);"></i> Price (UGX) *</label><div class="sinput-w"><i class="bi bi-cash-stack sf-ico"></i><input type="number" name="price" class="sinput" value="{{ product.price }}" min="0" step="500" required></div></div>
+        </div>
+        <div class="sf-row">
+          <div><label class="slbl"><i class="bi bi-percent" style="color:#ef5350;"></i> Sale Price (UGX)</label><div class="sinput-w"><i class="bi bi-tag sf-ico"></i><input type="number" name="sale_price" class="sinput" value="{{ product.sale_price or '' }}" placeholder="No sale" min="0" step="500"></div></div>
+          <div><label class="slbl"><i class="bi bi-box" style="color:var(--sky);"></i> Stock *</label><div class="sinput-w"><i class="bi bi-boxes sf-ico"></i><input type="number" name="stock" class="sinput" value="{{ product.stock }}" min="0" required></div></div>
+        </div>
+        <div class="sf-full"><label class="slbl"><i class="bi bi-text-paragraph" style="color:var(--text-muted);"></i> Description</label><textarea name="description" class="sinput" style="min-height:100px;padding-top:14px;resize:vertical;">{{ product.description or '' }}</textarea></div>
+
+        <div class="sf-full">
+          <label class="admin-toggle-check">
+            <input type="checkbox" name="is_featured" id="featured" {% if product.is_featured %}checked{% endif %}>
+            <span class="toggle-check-slider"></span>
+            <span class="toggle-check-label"><i class="bi bi-star-fill" style="color:var(--gold);"></i> Featured Product</span>
+          </label>
+        </div>
+
+        <div class="sf-full">
+          <label class="slbl"><i class="bi bi-image" style="color:var(--green);"></i> Main Product Image</label>
+          {% if product.image_url %}
+          <div style="margin-bottom:12px;"><img src="{{ url_for('static', filename=product.image_url) }}" style="height:120px;border-radius:14px;border:2px solid rgba(168,216,234,.3);"></div>
+          {% endif %}
+          <label class="file-drop-zone">
+            <input type="file" name="image" accept="image/*" onchange="previewImage(this,'preview')">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <span>Upload new image (replaces current)</span>
+          </label>
+          <img id="preview" src="" style="display:none;max-height:150px;margin-top:10px;border-radius:14px;">
+        </div>
+
+        <div class="sf-full">
+          <label class="slbl"><i class="bi bi-images" style="color:var(--sky);"></i> Additional Images</label>
+          {% if product.images %}
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-bottom:12px;">
+            {% for img in product.images %}
+            <img src="{{ url_for('static', filename=img.image_url) }}" style="width:100%;height:100px;object-fit:cover;border-radius:10px;border:2px solid rgba(168,216,234,.3);">
+            {% endfor %}
+          </div>
+          {% endif %}
+          <label class="file-drop-zone">
+            <input type="file" name="product_images" accept="image/*" multiple onchange="previewMultipleImages(this)">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <span>Select new images (replaces current)</span>
+          </label>
+          <div id="multiplePreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-top:10px;"></div>
+        </div>
+      </div>
+      <div class="ssave" style="gap:12px;">
+        <a href="{{ url_for('admin.products') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

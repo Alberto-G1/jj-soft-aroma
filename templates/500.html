@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Server Error — J&amp;J Soft Aroma{% endblock %}
+
+{% block content %}
+<div class="error-page error-500">
+  <div class="container text-center py-5">
+    <div class="error-icon-wrap" style="color:#e85555;">⚠️</div>
+    <div class="error-code" style="color:#e85555;">500</div>
+    <h3 style="font-family:'Playfair Display',serif;color:var(--navy-deep);margin:18px 0 10px;">
+      Something Went Wrong
+    </h3>
+    <p style="color:var(--text-mid);font-size:0.92rem;max-width:420px;margin:0 auto 32px;">
+      We're sorry — something went wrong on our end. Please try again or contact us on WhatsApp.
+    </p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="{{ url_for('customer.home') }}" class="btn-primary-custom">
+        <i class="bi bi-house"></i> Go Home
+      </a>
+      <a href="https://wa.me/256760868005" target="_blank" class="btn-green-custom">
+        <i class="bi bi-whatsapp"></i> Contact Support
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

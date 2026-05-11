@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import product_card %}
+{% block title %}{{ product.name }} — J&amp;J Soft Aroma{% endblock %}
+
+{% block content %}
+<section class="product-detail-section">
+  <div class="container">
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb-custom mb-4"
+         style="padding-top:12px;color:var(--text-soft);font-size:0.8rem;">
+      <a href="{{ url_for('customer.home') }}" style="color:var(--text-mid);text-decoration:none;">Home</a>
+      <span class="sep" style="color:var(--sky-light);">›</span>
+      <a href="{{ url_for('customer.products') }}" style="color:var(--text-mid);text-decoration:none;">Products</a>
+      {% if product.category %}
+        <span class="sep" style="color:var(--sky-light);">›</span>
+        <a href="{{ url_for('customer.products', category=product.category.slug) }}"
+           style="color:var(--text-mid);text-decoration:none;">{{ product.category.name }}</a>
+      {% endif %}
+      <span class="sep" style="color:var(--sky-light);">›</span>
+      <span class="crumb-current" style="color:var(--navy);">{{ product.name }}</span>
+    </div>
+
+    <div class="row g-5">
+
+      <!-- ── IMAGE GALLERY ─────────────────────────── -->
+      <div class="col-lg-5">
+        <div class="product-gallery" style="position:sticky;top:90px;">
+
+          <!-- Main image -->
+          <div class="main-product-img">
+            {% if product.images %}
+              <img id="mainProductImg"
+                   src="{{ url_for('static', filename=product.images[0].image_url) }}"
+                   alt="{{ product.name }}"
+                   style="transition:opacity 0.25s ease;">
+            {% elif product.image_url %}
+              <img id="mainProductImg"
+                   src="{{ url_for('static', filename=product.image_url) }}"
+                   alt="{{ product.name }}"
+                   style="transition:opacity 0.25s ease;">
+            {% else %}
+              <div style="font-size:7rem;line-height:1;">🍼</div>
+            {% endif %}
+
+            <!-- Sale badge on image -->
+            {% if product.sale_price and product.sale_price < product.price %}
+              <span class="product-badge badge-sale" style="top:16px;left:16px;">
+                {{ ((1 - product.sale_price / product.price) * 100) | int }}% OFF
+              </span>
+            {% endif %}
+          </div>
+
+          <!-- Thumbnails -->
+          <div class="thumb-row mt-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(80px, 1fr)); gap:10px;">
+            {% if product.images %}
+              {% for img in product.images %}
+                <div class="thumb {% if loop.first %}active{% endif %}" onclick="changeMainImage('{{ url_for('static', filename=img.image_url) }}', this)" style="cursor:pointer; border-radius:8px; overflow:hidden; border:2px solid var(--divider); transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--divider)'">
+                  <img src="{{ url_for('static', filename=img.image_url) }}" alt="Product variant" style="width:100%; height:80px; object-fit:cover;">
+                </div>
+              {% endfor %}
+            {% elif product.image_url %}
+              <div class="thumb active" style="border-radius:8px; overflow:hidden; border:2px solid var(--gold);">
+                <img src="{{ url_for('static', filename=product.image_url) }}" alt="Main" style="width:100%; height:80px; object-fit:cover;">
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── PRODUCT INFO ───────────────────────────── -->
+      <div class="col-lg-7">
+        <div class="product-detail-info" style="padding-left:8px;">
+
+          <!-- Category + Brand -->
+          {% if product.category %}
+            <span class="product-cat-badge mb-2 d-inline-block">{{ product.category.name }}</span>
+          {% endif %}
+          <div class="detail-brand">J&amp;J Soft Aroma</div>
+
+          <!-- Title -->
+          <h1 class="detail-title">{{ product.name }}</h1>
+
+          <!-- Rating row (static for now) -->
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="detail-stars">★★★★★</div>
+            <span style="font-size:0.8rem;color:var(--text-soft);">Verified Product</span>
+            {% if product.stock > 0 %}
+              <span style="color:var(--green);font-size:0.8rem;font-weight:600;">
+                <i class="bi bi-check-circle"></i> In Stock
+              </span>
+            {% else %}
+              <span style="color:#e85555;font-size:0.8rem;font-weight:600;">
+                <i class="bi bi-x-circle"></i> Out of Stock
+              </span>
+            {% endif %}
+          </div>
+
+          <!-- Price -->
+          <div class="detail-price mb-2">
+            {% if product.sale_price and product.sale_price < product.price %}
+              <span style="color:#ef5350;">UGX {{ "{:,.0f}".format(product.sale_price) }}</span>
+              <span class="old">UGX {{ "{:,.0f}".format(product.price) }}</span>
+              <span class="save">Save {{ ((1 - product.sale_price / product.price) * 100) | int }}%</span>
+            {% else %}
+              UGX {{ "{:,.0f}".format(product.price) }}
+            {% endif %}
+          </div>
+
+          <!-- Stock status -->
+          {% if product.stock > 5 %}
+            <p style="color:var(--green);font-size:0.82rem;font-weight:600;margin-bottom:18px;">
+              <i class="bi bi-check-circle"></i>
+              In Stock ({{ product.stock }} available)
+            </p>
+          {% elif product.stock > 0 %}
+            <p style="color:#f59e0b;font-size:0.82rem;font-weight:600;margin-bottom:18px;">
+              <i class="bi bi-exclamation-circle"></i>
+              Only {{ product.stock }} left — order soon!
+            </p>
+          {% endif %}
+
+          <div style="height:1px;background:var(--sky-pale);margin:18px 0;"></div>
+
+          <!-- Description -->
+          {% if product.description %}
+            <p style="color:var(--text-mid);font-size:0.88rem;line-height:1.85;margin-bottom:22px;">
+              {{ product.description }}
+            </p>
+          {% endif %}
+
+          <!-- Add to Cart Form -->
+          {% if product.stock > 0 %}
+            <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}"
+                  method="POST"
+                  class="product-action-form"
+                  data-product="{{ product.name }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="qty-row d-flex align-items-center gap-3 mb-4">
+                <span style="font-size:0.84rem;font-weight:600;color:var(--text-dark);min-width:76px;">Quantity:</span>
+                <div class="qty-control">
+                  <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                  <input type="number" name="quantity" id="qty"
+                         class="qty-input"
+                         value="1" min="1" max="{{ product.stock }}">
+                  <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+                </div>
+                <span style="font-size:0.76rem;color:var(--green);font-weight:600;">
+                  <i class="bi bi-check"></i> {{ product.stock }} available
+                </span>
+              </div>
+
+              <div class="detail-btns d-flex gap-3 mb-4" style="flex-wrap:wrap;">
+                <button type="submit" class="btn-add-cart" style="flex:1;min-width:160px;" id="addToCartBtn">
+                  <i class="bi bi-cart-plus"></i> Add to Cart
+                </button>
+                <button type="button" class="btn-buy-now" style="flex:1;min-width:140px;" id="buyNowBtn"
+                        onclick="document.querySelector('.product-action-form').setAttribute('data-action', 'buy-now'); document.querySelector('.product-action-form').submit();">
+                  <i class="bi bi-lightning-charge"></i> Buy Now
+                </button>
+              </div>
+            </form>
+          {% else %}
+            <button class="btn-add-cart w-100 mb-3" disabled style="opacity:0.5;cursor:not-allowed;">
+              <i class="bi bi-x-circle"></i> Out of Stock
+            </button>
+          {% endif %}
+
+          <!-- WhatsApp + Share -->
+          <div class="d-flex gap-2 flex-wrap mb-4">
+            <a href="https://wa.me/256760868005?text=Hello+J%26J+Soft+Aroma!+I+want+to+order:+{{ product.name | urlencode }}+at+UGX+{{ (product.sale_price | int if product.sale_price and product.sale_price < product.price else product.price | int) }}"
+               target="_blank"
+               class="wa-share-btn">
+              <i class="bi bi-whatsapp"></i> Order via WhatsApp
+            </a>
+            <a href="https://wa.me/?text=Check+this+out+on+J%26J+Soft+Aroma!%0A{{ product.name | urlencode }}%0APrice:+UGX+{{ (product.sale_price | int if product.sale_price and product.sale_price < product.price else product.price | int) }}%0AShop:+{{ request.url }}"
+               target="_blank"
+               class="wa-share-btn" style="background:rgba(44,95,122,0.08);border-color:rgba(44,95,122,0.2);color:var(--navy);">
+              <i class="bi bi-share"></i> Share
+            </a>
+          </div>
+
+          <div style="height:1px;background:var(--sky-pale);margin:18px 0;"></div>
+
+          <!-- Meta guarantees -->
+          <div class="detail-meta">
+            <div class="meta-item">
+              <i class="bi bi-shield-check"></i>
+              <span>Guaranteed <strong>100% Safe</strong> &amp; Baby-Friendly</span>
+            </div>
+            <div class="meta-item">
+              <i class="bi bi-truck"></i>
+              <span><strong>Fast delivery</strong> across Kampala &amp; surrounding areas</span>
+            </div>
+            <div class="meta-item">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              <span><strong>Easy return</strong> policy — contact us on WhatsApp</span>
+            </div>
+            <div class="meta-item">
+              <i class="bi bi-leaf"></i>
+              <span><strong>Natural &amp; Organic</strong> ingredients, no harmful chemicals</span>
+            </div>
+            <div class="meta-item">
+              <i class="bi bi-whatsapp" style="color:#25D366;"></i>
+              <span>Questions? <strong>
+                <a href="https://wa.me/256760868005" target="_blank"
+                   style="color:var(--green);text-decoration:none;">Chat on WhatsApp</a>
+              </strong></span>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /col -->
+    </div><!-- /row -->
+
+
+    <!-- ── RELATED PRODUCTS ───────────────────────── -->
+    {% if related %}
+    <div class="mt-5 pt-4">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="section-label">More Products</span>
+          <h3 class="section-title">You Might Also <span>Like</span></h3>
+          <div class="section-divider"></div>
+        </div>
+        <a href="{{ url_for('customer.products') }}" class="btn-outline-custom"
+           style="padding:9px 20px;font-size:0.82rem;">
+          View All <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+      <div class="row g-3">
+        {% for item in related %}
+          <div class="col-6 col-md-3 fade-in">
+            {{ product_card(item) }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function changeQty(delta) {
+  const input = document.getElementById('qty');
+  const max   = parseInt(input.max);
+  let val     = parseInt(input.value) + delta;
+  if (val < 1)   val = 1;
+  if (val > max) val = max;
+  input.value = val;
+}
+
+// ── CHANGE MAIN IMAGE FROM THUMBNAILS ──────────────────────
+function changeMainImage(imageSrc, thumbElement) {
+  document.getElementById('mainProductImg').src = imageSrc;
+  document.querySelectorAll('.thumb').forEach(t => {
+    t.style.borderColor = 'var(--divider)';
+  });
+  thumbElement.style.borderColor = 'var(--gold)';
+}
+
+// ── PRODUCT ACTION TOASTS ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.product-action-form');
+  if (!form) return;
+  
+  form.addEventListener('submit', (e) => {
+    const productName = form.getAttribute('data-product');
+    const action = form.getAttribute('data-action') || 'add-to-cart';
+    
+    if (action === 'add-to-cart') {
+      e.preventDefault(); // Prevent default to show toast first
+      showToast(`${productName} added to cart!`, 'cart');
+      setTimeout(() => form.submit(), 500);
+    } else if (action === 'buy-now') {
+      e.preventDefault();
+      showToast(`Proceeding to checkout for ${productName}...`, 'success');
+      setTimeout(() => {
+        window.location.href = '{{ url_for("customer.checkout") }}';
+      }, 500);
+    }
+  });
+});
+</script>
+{% endblock %}
+

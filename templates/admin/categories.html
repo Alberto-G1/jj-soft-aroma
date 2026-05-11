@@ -1,0 +1,252 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Categories — J&J Admin{% endblock %}
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+<section class="catalogue-hero polished-panel">
+  <div>
+    <p class="admin-eyebrow">Catalogue organization</p>
+    <h2>Manage product categories</h2>
+    <p>Group products, update category images, and quickly review how many products sit under each category.</p>
+  </div>
+  <div class="admin-hero-actions">
+    <span class="admin-count-pill"><i class="bi bi-tags"></i> {{ total_categories }} total</span>
+    <button class="btn btn-primary" onclick="openModal('addCategoryModal')"><i class="bi bi-plus-circle"></i> Add Category</button>
+  </div>
+</section>
+
+<form method="GET" action="{{ url_for('admin.categories') }}" class="catalogue-filter-bar polished-panel">
+  <div class="filter-search-field">
+    <i class="bi bi-search"></i>
+    <input type="text" name="search" value="{{ filters.search }}" placeholder="Search categories by name or slug...">
+  </div>
+  <select name="product_filter" class="filter-select">
+    <option value="" {% if not filters.product_filter %}selected{% endif %}>All categories</option>
+    <option value="has_products" {% if filters.product_filter == 'has_products' %}selected{% endif %}>With products</option>
+    <option value="empty" {% if filters.product_filter == 'empty' %}selected{% endif %}>Empty categories</option>
+  </select>
+  <select name="per_page" class="filter-select compact">
+    {% for n in [6, 12, 24, 48] %}
+      <option value="{{ n }}" {% if filters.per_page == n %}selected{% endif %}>{{ n }}/page</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Apply</button>
+  <a href="{{ url_for('admin.categories') }}" class="btn btn-outline"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+</form>
+
+{% if categories %}
+<div class="catalogue-grid premium-card-grid categories-premium-grid">
+  {% for cat in categories %}
+  {% set category_payload = {
+    'id': cat.id,
+    'name': cat.name,
+    'slug': cat.slug,
+    'product_count': cat.products|length,
+    'icon_url': cat.icon_url or '',
+    'products': cat.products|map(attribute='name')|list
+  } %}
+  <article class="premium-category-card">
+    <div class="category-orb-wrap">
+      {% if cat.icon_url %}
+        <img src="{{ url_for('static', filename=cat.icon_url) }}" alt="{{ cat.name }}">
+      {% else %}
+        <div class="category-orb-placeholder"><i class="bi bi-tags"></i></div>
+      {% endif %}
+      <span class="premium-badge success"><i class="bi bi-box-seam"></i> {{ cat.products|length }} products</span>
+    </div>
+
+    <div class="premium-card-content category-content-center">
+      <p class="premium-category"><i class="bi bi-hash"></i> {{ cat.slug }}</p>
+      <h3>{{ cat.name }}</h3>
+      <p class="premium-description">{{ cat.products|length }} product{{ 's' if cat.products|length != 1 else '' }} currently belong to this category.</p>
+    </div>
+
+    <div class="premium-card-actions">
+      <button class="btn btn-outline btn-sm" data-category='{{ category_payload|tojson|safe }}' onclick="openViewCategoryModalFromEl(this)"><i class="bi bi-eye"></i> View</button>
+      <button class="btn btn-primary btn-sm" data-category-id="{{ cat.id }}" data-category-name='{{ cat.name|tojson|safe }}' onclick="openEditCategoryModalFromEl(this)"><i class="bi bi-pen"></i> Edit</button>
+      <form action="{{ url_for('admin.delete_category', id=cat.id) }}" method="POST" class="deleteForm" data-item-name='{{ cat.name|tojson|safe }}'>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmFromEl(this)"><i class="bi bi-trash"></i> Delete</button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="pagination-bar polished-panel" aria-label="Categories pagination">
+  <span>Showing page {{ pagination.page }} of {{ pagination.pages }} — {{ pagination.total }} result(s)</span>
+  <div class="pagination-actions">
+    {% if pagination.has_prev %}
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.categories', page=pagination.prev_num, search=filters.search, product_filter=filters.product_filter, per_page=filters.per_page) }}"><i class="bi bi-chevron-left"></i> Previous</a>
+    {% endif %}
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+      {% if page_num %}
+        <a class="page-pill {% if page_num == pagination.page %}active{% endif %}" href="{{ url_for('admin.categories', page=page_num, search=filters.search, product_filter=filters.product_filter, per_page=filters.per_page) }}">{{ page_num }}</a>
+      {% else %}<span class="page-gap">…</span>{% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.categories', page=pagination.next_num, search=filters.search, product_filter=filters.product_filter, per_page=filters.per_page) }}">Next <i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}
+{% else %}
+<div class="glass-card empty-state-card">
+  <i class="bi bi-inbox"></i>
+  <p>No categories matched your filters.</p>
+  <button class="btn btn-primary" onclick="openModal('addCategoryModal')"><i class="bi bi-plus-circle"></i> Add Category</button>
+</div>
+{% endif %}
+
+<div class="modal-overlay" id="addCategoryModal" onclick="if(event.target === this) closeModal('addCategoryModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Add New Category</h2>
+      <button class="modal-close" onclick="closeModal('addCategoryModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <form method="POST" enctype="multipart/form-data" id="addCategoryForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label class="form-label">Category Name *</label>
+          <input type="text" name="name" class="form-input" placeholder="e.g. Perfumes" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon (optional)</label>
+          <label class="form-file-input">
+            <input type="file" name="icon" class="form-input" accept="image/*" onchange="previewImage(this,'iconPreview')">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <span>Click to upload or drag and drop</span>
+          </label>
+          <img id="iconPreview" src="" style="display:none;height:80px;margin-top:12px;border-radius:12px;">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('addCategoryModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="viewCategoryModal" onclick="if(event.target === this) closeModal('viewCategoryModal')">
+  <div class="modal premium-detail-modal">
+    <div class="modal-header">
+      <div>
+        <p class="admin-eyebrow">Category preview</p>
+        <h2 class="modal-title" id="viewCategoryName">Category Details</h2>
+      </div>
+      <button class="modal-close" onclick="closeModal('viewCategoryModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-modal-grid category-detail-grid">
+        <div class="detail-image-panel category-detail-image">
+          <img id="viewCategoryIcon" src="" alt="Category icon">
+        </div>
+        <div class="detail-info-panel">
+          <div class="detail-chip-row">
+            <span id="viewCategorySlug" class="detail-chip"></span>
+            <span id="viewCategoryProductCount" class="detail-chip"></span>
+          </div>
+          <div class="detail-section">
+            <h4>Products in this category</h4>
+            <div id="viewCategoryProducts" class="detail-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('viewCategoryModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editCategoryModal" onclick="if(event.target === this) closeModal('editCategoryModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Category</h2>
+      <button class="modal-close" onclick="closeModal('editCategoryModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <form method="POST" enctype="multipart/form-data" id="editCategoryForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category_id" id="editCategoryId">
+        <div class="form-group">
+          <label class="form-label">Category Name *</label>
+          <input type="text" name="name" id="editCategoryName" class="form-input" placeholder="e.g. Perfumes" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon (optional)</label>
+          <label class="form-file-input">
+            <input type="file" name="icon" class="form-input" accept="image/*" onchange="previewImage(this,'editIconPreview')">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <span>Click to upload or drag and drop</span>
+          </label>
+          <img id="editIconPreview" src="" style="display:none;height:80px;margin-top:12px;border-radius:12px;">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('editCategoryModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function parseJsonAttr(el, attr) {
+  const raw = el.getAttribute(attr);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (err) { return raw; }
+}
+
+function openViewCategoryModalFromEl(el) {
+  const data = parseJsonAttr(el, 'data-category');
+  if (!data) return;
+  openViewCategoryModal(data);
+}
+
+function openEditCategoryModalFromEl(el) {
+  const id = el.getAttribute('data-category-id');
+  const name = parseJsonAttr(el, 'data-category-name') || '';
+  if (!id) return;
+  openEditCategoryModal(id, name);
+}
+
+function showDeleteConfirmFromEl(el) {
+  const form = el.closest('form');
+  if (!form) return;
+  const name = parseJsonAttr(form, 'data-item-name') || 'this item';
+  showDeleteConfirm(name, form);
+}
+
+function fallbackCategorySvg() {
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520"><rect width="520" height="520" rx="80" fill="#eef1f5"/><circle cx="260" cy="230" r="90" fill="#c9d3db"/><path d="M160 360c38-62 162-62 200 0" fill="#94a3ad"/></svg>');
+}
+
+function openViewCategoryModal(category) {
+  const staticBase = '{{ url_for("static", filename="") }}';
+  document.getElementById('viewCategoryName').textContent = category.name;
+  document.getElementById('viewCategorySlug').innerHTML = '<i class="bi bi-hash"></i> ' + category.slug;
+  document.getElementById('viewCategoryProductCount').innerHTML = '<i class="bi bi-box-seam"></i> ' + category.product_count + ' products';
+  const productsBox = document.getElementById('viewCategoryProducts');
+  if (category.products && category.products.length) {
+    productsBox.innerHTML = category.products.map(name => '<span>' + name + '</span>').join('');
+  } else {
+    productsBox.innerHTML = '<em>No products have been assigned to this category yet.</em>';
+  }
+  document.getElementById('viewCategoryIcon').src = category.icon_url ? staticBase + category.icon_url : fallbackCategorySvg();
+  openModal('viewCategoryModal');
+}
+
+function openEditCategoryModal(id, name) {
+  document.getElementById('editCategoryId').value = id;
+  document.getElementById('editCategoryName').value = name;
+  document.getElementById('editCategoryForm').action = '/admin/categories/edit/' + id;
+  openModal('editCategoryModal');
+}
+</script>
+{% endblock %}

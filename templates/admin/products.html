@@ -1,0 +1,211 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Products — J&J Admin{% endblock %}
+{% block page_title %}Products <span style="color:var(--gold);">Catalogue</span>{% endblock %}
+
+{% block content %}
+<section class="catalogue-hero polished-panel">
+  <div>
+    <p class="admin-eyebrow">Inventory management</p>
+    <h2>Manage your product catalogue</h2>
+    <p>Search, filter, view, edit, and remove products from a cleaner modern product board.</p>
+  </div>
+  <div class="admin-hero-actions">
+    <span class="admin-count-pill"><i class="bi bi-box-seam"></i> {{ total_products }} total</span>
+    <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Product</a>
+  </div>
+</section>
+
+<form method="GET" action="{{ url_for('admin.products') }}" class="catalogue-filter-bar polished-panel">
+  <div class="filter-search-field">
+    <i class="bi bi-search"></i>
+    <input type="text" name="search" value="{{ filters.search }}" placeholder="Search products by name or description...">
+  </div>
+  <select name="category" class="filter-select">
+    <option value="">All categories</option>
+    {% for cat in categories %}
+      <option value="{{ cat.id }}" {% if filters.category|string == cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="stock" class="filter-select">
+    <option value="" {% if not filters.stock %}selected{% endif %}>All stock</option>
+    <option value="in_stock" {% if filters.stock == 'in_stock' %}selected{% endif %}>In stock</option>
+    <option value="low" {% if filters.stock == 'low' %}selected{% endif %}>Low stock</option>
+    <option value="out" {% if filters.stock == 'out' %}selected{% endif %}>Out of stock</option>
+  </select>
+  <select name="featured" class="filter-select">
+    <option value="" {% if not filters.featured %}selected{% endif %}>Featured + normal</option>
+    <option value="yes" {% if filters.featured == 'yes' %}selected{% endif %}>Featured only</option>
+    <option value="no" {% if filters.featured == 'no' %}selected{% endif %}>Not featured</option>
+  </select>
+  <select name="per_page" class="filter-select compact">
+    {% for n in [6, 12, 24, 48] %}
+      <option value="{{ n }}" {% if filters.per_page == n %}selected{% endif %}>{{ n }}/page</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Apply</button>
+  <a href="{{ url_for('admin.products') }}" class="btn btn-outline"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+</form>
+
+{% if products %}
+<div class="catalogue-grid premium-card-grid">
+  {% for product in products %}
+  {% set product_payload = {
+    'id': product.id,
+    'name': product.name,
+    'price': product.price|float,
+    'stock': product.stock,
+    'category': product.category.name if product.category else 'Uncategorized',
+    'description': product.description or 'No product description has been added yet.',
+    'image_url': product.image_url or '',
+    'featured': product.is_featured,
+    'created_at': product.created_at.strftime('%d %b %Y') if product.created_at else 'Not available'
+  } %}
+  <article class="premium-product-card">
+    <div class="premium-media-wrap">
+      {% if product.image_url %}
+        <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+      {% else %}
+        <div class="premium-placeholder"><i class="bi bi-image"></i></div>
+      {% endif %}
+      <div class="premium-top-badges">
+        {% if product.is_featured %}<span class="premium-badge gold"><i class="bi bi-star-fill"></i> Featured</span>{% endif %}
+        <span class="premium-badge {% if product.stock <= 0 %}danger{% elif product.stock < 5 %}warning{% else %}success{% endif %}">
+          {% if product.stock <= 0 %}Out{% elif product.stock < 5 %}Low{% else %}In stock{% endif %}
+        </span>
+      </div>
+      <div class="premium-floating-actions">
+        <button type="button" class="icon-action" data-product='{{ product_payload|tojson|safe }}' onclick="openViewProductModalFromEl(this)" title="View"><i class="bi bi-eye"></i></button>
+        <a href="{{ url_for('admin.edit_product', id=product.id) }}" class="icon-action" title="Edit"><i class="bi bi-pencil-square"></i></a>
+      </div>
+    </div>
+
+    <div class="premium-card-content">
+      <div class="premium-card-heading">
+        <div>
+          <p class="premium-category"><i class="bi bi-tag"></i> {{ product.category.name if product.category else 'Uncategorized' }}</p>
+          <h3>{{ product.name }}</h3>
+        </div>
+        <div class="premium-price">UGX {{ "{:,.0f}".format(product.price) }}</div>
+      </div>
+      <p class="premium-description">{{ product.description or 'No product description has been added yet.' }}</p>
+      <div class="premium-stats-row">
+        <span><i class="bi bi-box"></i> {{ product.stock }} units</span>
+        <span><i class="bi bi-calendar3"></i> {{ product.created_at.strftime('%d %b %Y') if product.created_at else 'N/A' }}</span>
+      </div>
+    </div>
+
+    <div class="premium-card-actions">
+      <button type="button" class="btn btn-outline btn-sm" data-product='{{ product_payload|tojson|safe }}' onclick="openViewProductModalFromEl(this)"><i class="bi bi-eye"></i> View</button>
+      <a href="{{ url_for('admin.edit_product', id=product.id) }}" class="btn btn-primary btn-sm"><i class="bi bi-pen"></i> Edit</a>
+      <form action="{{ url_for('admin.delete_product', id=product.id) }}" method="POST" class="deleteForm" data-item-name='{{ product.name|tojson|safe }}'>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmFromEl(this)"><i class="bi bi-trash"></i> Delete</button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="pagination-bar polished-panel" aria-label="Products pagination">
+  <span>Showing page {{ pagination.page }} of {{ pagination.pages }} — {{ pagination.total }} result(s)</span>
+  <div class="pagination-actions">
+    {% if pagination.has_prev %}
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.products', page=pagination.prev_num, search=filters.search, category=filters.category, stock=filters.stock, featured=filters.featured, per_page=filters.per_page) }}"><i class="bi bi-chevron-left"></i> Previous</a>
+    {% endif %}
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+      {% if page_num %}
+        <a class="page-pill {% if page_num == pagination.page %}active{% endif %}" href="{{ url_for('admin.products', page=page_num, search=filters.search, category=filters.category, stock=filters.stock, featured=filters.featured, per_page=filters.per_page) }}">{{ page_num }}</a>
+      {% else %}<span class="page-gap">…</span>{% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.products', page=pagination.next_num, search=filters.search, category=filters.category, stock=filters.stock, featured=filters.featured, per_page=filters.per_page) }}">Next <i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}
+{% else %}
+<div class="glass-card empty-state-card">
+  <i class="bi bi-box-seam"></i>
+  <p>No products matched your filters.</p>
+  <a href="{{ url_for('admin.products') }}" class="btn btn-primary"><i class="bi bi-arrow-counterclockwise"></i> Clear filters</a>
+</div>
+{% endif %}
+
+<div class="modal-overlay" id="viewProductModal" onclick="if(event.target === this) closeModal('viewProductModal')">
+  <div class="modal premium-detail-modal">
+    <div class="modal-header">
+      <div>
+        <p class="admin-eyebrow">Product preview</p>
+        <h2 class="modal-title" id="viewProductName">Product Details</h2>
+      </div>
+      <button class="modal-close" onclick="closeModal('viewProductModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-modal-grid">
+        <div class="detail-image-panel">
+          <img id="viewProductImage" src="" alt="Product image">
+          <span id="viewProductFeatured" class="premium-badge gold" style="display:none;"><i class="bi bi-star-fill"></i> Featured</span>
+        </div>
+        <div class="detail-info-panel">
+          <div class="detail-price" id="viewProductPrice"></div>
+          <div class="detail-chip-row">
+            <span id="viewProductStock" class="detail-chip"></span>
+            <span id="viewProductCategory" class="detail-chip"></span>
+            <span id="viewProductDate" class="detail-chip"></span>
+          </div>
+          <div class="detail-section">
+            <h4>Description</h4>
+            <p id="viewProductDescription"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('viewProductModal')">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function parseJsonAttr(el, attr) {
+  const raw = el.getAttribute(attr);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (err) { return raw; }
+}
+
+function openViewProductModalFromEl(el) {
+  const data = parseJsonAttr(el, 'data-product');
+  if (!data) return;
+  openViewProductModal(data);
+}
+
+function showDeleteConfirmFromEl(el) {
+  const form = el.closest('form');
+  if (!form) return;
+  const name = parseJsonAttr(form, 'data-item-name') || 'this item';
+  showDeleteConfirm(name, form);
+}
+
+function fallbackImageSvg() {
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="700" height="520" viewBox="0 0 700 520"><rect width="700" height="520" rx="34" fill="#eef1f5"/><path d="M190 190h320v170H190z" fill="#c9d3db"/><circle cx="245" cy="235" r="28" fill="#94a3ad"/><path d="M210 335l95-100 62 68 56-63 75 95H210z" fill="#94a3ad"/></svg>');
+}
+
+function openViewProductModal(product) {
+  const staticBase = '{{ url_for("static", filename="") }}';
+  document.getElementById('viewProductName').textContent = product.name;
+  document.getElementById('viewProductPrice').textContent = 'UGX ' + Number(product.price || 0).toLocaleString();
+  document.getElementById('viewProductStock').innerHTML = '<i class="bi bi-box"></i> ' + product.stock + ' units';
+  document.getElementById('viewProductCategory').innerHTML = '<i class="bi bi-tag"></i> ' + product.category;
+  document.getElementById('viewProductDate').innerHTML = '<i class="bi bi-calendar3"></i> ' + product.created_at;
+  document.getElementById('viewProductDescription').textContent = product.description;
+  const badge = document.getElementById('viewProductFeatured');
+  badge.style.display = product.featured ? 'inline-flex' : 'none';
+  const image = document.getElementById('viewProductImage');
+  image.src = product.image_url ? staticBase + product.image_url : fallbackImageSvg();
+  openModal('viewProductModal');
+}
+</script>
+{% endblock %}

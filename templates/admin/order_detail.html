@@ -1,0 +1,129 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Order JJ-{{ "%04d" % order.id }} — J&J Admin{% endblock %}
+{% block page_title %}Order <span style="color:var(--gold);">JJ-{{ "%04d" % order.id }}</span>{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+  <a href="{{ url_for('admin.orders') }}" class="btn btn-ghost btn-sm"><i class="bi bi-arrow-left"></i> Back to Orders</a>
+  <a href="{{ url_for('admin.print_order', id=order.id) }}" target="_blank" class="btn btn-ghost btn-sm"><i class="bi bi-printer"></i> Print Receipt</a>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:22px;">
+  <!-- ORDER ITEMS -->
+  <div class="glass-card">
+    <div class="card-header"><div class="card-title"><i class="bi bi-box-seam"></i> Items</div></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Qty</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items %}
+          <tr>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                {% if item.product and item.product.image_url %}
+                  <img src="{{ url_for('static', filename=item.product.image_url) }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                {% else %}
+                  <div style="width:40px;height:40px;background:var(--sky-pale);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-image"></i>
+                  </div>
+                {% endif %}
+                <span>{{ item.product.name if item.product else 'Deleted product' }}</span>
+              </div>
+            </td>
+            <td style="font-family:'Poppins',sans-serif;">UGX {{ "{:,.0f}".format(item.unit_price) }}</td>
+            <td>{{ item.quantity }}</td>
+            <td style="font-weight:700;">UGX {{ "{:,.0f}".format(item.unit_price * item.quantity) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align:right;font-weight:600;">Total</td>
+            <td style="font-family:'Poppins',sans-serif;font-weight:800;font-size:18px;color:var(--navy);">UGX {{ "{:,.0f}".format(order.total_price) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- CUSTOMER & STATUS -->
+  <div style="display:flex; flex-direction:column; gap:22px;">
+    <!-- Customer details -->
+    <div class="glass-card">
+      <div class="card-header"><div class="card-title"><i class="bi bi-person"></i> Customer</div></div>
+      <div style="padding:20px;">
+        <div style="margin-bottom:10px;"><span style="color:var(--text-muted);">Name:</span> <strong>{{ order.customer_name }}</strong></div>
+        <div style="margin-bottom:10px;"><span style="color:var(--text-muted);">Phone:</span> <strong>{{ order.phone }}</strong></div>
+        <div style="margin-bottom:10px;"><span style="color:var(--text-muted);">Location:</span> <strong>{{ order.location }}</strong></div>
+        <div style="margin-bottom:10px;"><span style="color:var(--text-muted);">Date:</span> <span>{{ order.created_at.strftime('%d %B %Y at %H:%M') }}</span></div>
+        {% if order.delivery_notes %}
+        <div style="margin-bottom:12px; padding:10px; background:var(--badge-gold); border-radius:8px;">
+          <i class="bi bi-sticky"></i> {{ order.delivery_notes }}
+        </div>
+        {% endif %}
+        <a href="https://wa.me/256{{ order.phone.lstrip('0') }}?text=Hello {{ order.customer_name | urlencode }}, your J%26J Soft Aroma order JJ-{{ '%04d'|format(order.id) }} update." target="_blank" class="btn btn-primary w-100" style="margin-top:12px;">
+          <i class="bi bi-whatsapp"></i> Message Customer
+        </a>
+      </div>
+    </div>
+
+    <!-- Status timeline & update -->
+    <div class="glass-card">
+      <div class="card-header"><div class="card-title"><i class="bi bi-clock-history"></i> Status Timeline</div></div>
+      <div style="padding:20px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          {% set flow = ['pending','confirmed','processing','delivered'] %}
+          {% for step in flow %}
+            <div style="display:flex; align-items:center; gap:4px;">
+              <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;
+                  {% if order.status == step %}
+                    background: var(--green); color: white;
+                  {% elif flow.index(step) < flow.index(order.status) %}
+                    background: var(--navy); color: white;
+                  {% else %}
+                    background: var(--divider); color: var(--text-muted);
+                  {% endif %}
+                  ">
+                {% if flow.index(step) < flow.index(order.status) %}
+                  <i class="bi bi-check"></i>
+                {% else %}
+                  {{ loop.index }}
+                {% endif %}
+              </div>
+              <span style="font-size:0.8rem; font-weight:600;
+                  {% if order.status == step %}color:var(--green);
+                  {% elif flow.index(step) < flow.index(order.status) %}color:var(--navy);
+                  {% else %}color:var(--text-muted);{% endif %}">
+                {{ step | title }}
+              </span>
+            </div>
+            {% if not loop.last %}
+              <i class="bi bi-chevron-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.update_order_status', id=order.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Update Status</label>
+            <select name="status" class="form-select">
+              {% for s in ['pending','confirmed','processing','delivered','cancelled'] %}
+                <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s | title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check"></i> Update Status</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

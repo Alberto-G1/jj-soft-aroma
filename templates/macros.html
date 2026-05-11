@@ -1,0 +1,121 @@
+{% macro product_card(product) %}
+{#
+  Redesigned product card — luxury soft brand aesthetic.
+  Preserves all original Flask functionality (routes, stock, prices).
+#}
+<div class="product-card h-100">
+
+  <!-- ── IMAGE AREA ─────────────────────────────────── -->
+  <div class="product-img-wrap">
+    <a href="{{ url_for('customer.product_detail', id=product.id) }}"
+       class="d-block w-100 h-100" style="text-decoration:none;">
+      {% if product.image_url %}
+        <img src="{{ url_for('static', filename=product.image_url) }}"
+             alt="{{ product.name }}" loading="lazy"
+             style="width:100%;height:100%;object-fit:cover;">
+      {% else %}
+        <div class="no-image-placeholder">
+          <i class="bi bi-stars"></i>
+        </div>
+      {% endif %}
+    </a>
+
+    <!-- Sale badge -->
+    {% if product.sale_price and product.sale_price < product.price %}
+      <span class="product-badge badge-sale">
+        SALE&nbsp;{{ ((1 - product.sale_price / product.price) * 100) | int }}%&nbsp;OFF
+      </span>
+    {% endif %}
+
+    <!-- Low stock badge -->
+    {% if product.stock > 0 and product.stock <= 5 %}
+      <span class="product-badge badge-low" style="left:auto;right:12px;">
+        Only {{ product.stock }} left!
+      </span>
+    {% endif %}
+
+    <!-- Out of stock overlay -->
+    {% if product.stock == 0 %}
+      <div class="oos-overlay">
+        <span>Out of Stock</span>
+      </div>
+    {% endif %}
+
+    <!-- Quick action buttons (appear on hover) -->
+    <div class="product-actions">
+      <a href="{{ url_for('customer.product_detail', id=product.id) }}"
+         class="action-btn" title="View Details">
+        <i class="bi bi-eye"></i>
+      </a>
+      <a href="https://wa.me/?text=Check+out+{{ product.name | urlencode }}+on+J%26J+Soft+Aroma!%0APrice%3A+UGX+{{ (product.sale_price | int if product.sale_price and product.sale_price < product.price else product.price | int) }}%0AShop%3A+{{ request.host_url }}product/{{ product.id }}"
+         target="_blank" class="action-btn" title="Share on WhatsApp">
+        <i class="bi bi-whatsapp"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── CARD BODY ───────────────────────────────────── -->
+  <div class="product-info">
+
+    <!-- Category pill -->
+    {% if product.category %}
+      <span class="product-cat-badge">{{ product.category.name }}</span>
+    {% endif %}
+
+    <!-- Brand line -->
+    <div class="product-brand">J&amp;J Soft Aroma</div>
+
+    <!-- Product name -->
+    <div class="product-name">
+      <a href="{{ url_for('customer.product_detail', id=product.id) }}">
+        {{ product.name }}
+      </a>
+    </div>
+
+    <!-- Stock label -->
+    {% if product.stock > 5 %}
+      <p class="stock-label stock-ok mb-1">
+        <i class="bi bi-check-circle-fill"></i> In stock
+      </p>
+    {% elif product.stock > 0 %}
+      <p class="stock-label stock-low mb-1">
+        <i class="bi bi-exclamation-circle-fill"></i> Only {{ product.stock }} left!
+      </p>
+    {% else %}
+      <p class="stock-label stock-out mb-1">
+        <i class="bi bi-x-circle-fill"></i> Out of stock
+      </p>
+    {% endif %}
+
+    <!-- Price + Add to cart -->
+    <div class="product-price-row">
+      <div>
+        {% if product.sale_price and product.sale_price < product.price %}
+          <span class="price price-sale">UGX {{ "{:,.0f}".format(product.sale_price) }}</span>
+          <span class="price-old">UGX {{ "{:,.0f}".format(product.price) }}</span>
+        {% else %}
+          <span class="price">UGX {{ "{:,.0f}".format(product.price) }}</span>
+        {% endif %}
+      </div>
+
+      {% if product.stock > 0 %}
+        <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}"
+              method="POST" style="margin:0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="quantity" value="1">
+          <button type="submit" class="add-to-cart-btn" title="Add to Cart">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </form>
+      {% else %}
+        <button class="add-to-cart-btn" disabled
+                style="opacity:0.4;cursor:not-allowed;"
+                title="Out of Stock">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      {% endif %}
+    </div>
+
+  </div><!-- /product-info -->
+</div><!-- /product-card -->
+{% endmacro %}

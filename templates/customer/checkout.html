@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}Checkout — J&amp;J Soft Aroma{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="container page-hero-content">
+    <div class="breadcrumb-custom mb-3">
+      <a href="{{ url_for('customer.home') }}">Home</a>
+      <span class="sep">›</span>
+      <a href="{{ url_for('customer.cart') }}">Cart</a>
+      <span class="sep">›</span>
+      <span class="crumb-current">Checkout</span>
+    </div>
+    <h1>Secure <em style="color:var(--sky);">Checkout</em></h1>
+  </div>
+</div>
+
+<section style="padding:56px 0 80px;">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- ── CHECKOUT FORM ────────────────────────── -->
+      <div class="col-lg-7">
+
+        <div class="checkout-form">
+          <h3 class="checkout-form-title">
+            <i class="bi bi-person"></i> Delivery Information
+          </h3>
+
+          <form method="POST" id="checkoutForm" class="checkout-action-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Full Name *</label>
+                <input type="text" name="name" class="form-control"
+                       placeholder="e.g. Sarah Nakato" required
+                       style="border-radius:12px;">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone Number *</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                        style="border-radius:12px 0 0 12px;border:2px solid var(--sky-light);border-right:none;background:var(--sky-pale);">
+                    <i class="bi bi-telephone" style="color:var(--navy);"></i>
+                  </span>
+                  <input type="tel" name="phone" class="form-control"
+                         placeholder="0760 868 005" required
+                         style="border-radius:0 12px 12px 0;">
+                </div>
+                <div style="font-size:0.72rem;color:var(--text-soft);margin-top:4px;">
+                  We'll confirm your order via WhatsApp
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Delivery Location *</label>
+                <select name="location" class="form-control" required
+                        style="border-radius:12px;">
+                  <option value="">— Select your area —</option>
+                  <option>Kampala Central</option>
+                  <option>Wakiso</option>
+                  <option>Entebbe</option>
+                  <option>Mukono</option>
+                  <option>Nansana</option>
+                  <option>Kira</option>
+                  <option>Kawempe</option>
+                  <option>Makindye</option>
+                  <option>Rubaga</option>
+                  <option>Nakawa</option>
+                  <option>Ntinda</option>
+                  <option>Mbarara</option>
+                  <option>Jinja</option>
+                  <option>Other (specify in notes)</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">
+                  Delivery Notes
+                  <span style="color:var(--text-soft);font-weight:400;font-size:0.75rem;">(optional)</span>
+                </label>
+                <textarea name="delivery_notes" class="form-control" rows="3"
+                          style="border-radius:12px;resize:none;"
+                          placeholder="e.g. Call me when you arrive, Leave at gate, Near the blue gate…"></textarea>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Payment method -->
+        <div class="checkout-form mt-3">
+          <h3 class="checkout-form-title">
+            <i class="bi bi-credit-card"></i> Payment Method
+          </h3>
+          <div class="payment-group">
+            <div class="payment-option active" onclick="selectPayment(this)">
+              <input type="radio" name="payment" checked>
+              <div class="payment-icon">📱</div>
+              <div>
+                <div class="payment-label">Mobile Money</div>
+                <div class="payment-sub">MTN MoMo &amp; Airtel Money</div>
+              </div>
+            </div>
+            <div class="payment-option" onclick="selectPayment(this)">
+              <input type="radio" name="payment">
+              <div class="payment-icon">💵</div>
+              <div>
+                <div class="payment-label">Cash on Delivery</div>
+                <div class="payment-sub">Pay when you receive your order</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info alert -->
+          <div style="background:var(--sky-pale);border-radius:12px;padding:14px 16px;margin-top:14px;display:flex;gap:10px;align-items:flex-start;">
+            <i class="bi bi-info-circle" style="color:var(--navy);font-size:1rem;margin-top:1px;flex-shrink:0;"></i>
+            <div style="font-size:0.82rem;color:var(--text-mid);line-height:1.6;">
+              After placing your order, you'll be redirected to WhatsApp to confirm
+              with us directly. Payment is done on delivery or via Mobile Money.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── ORDER SUMMARY ───────────────────────── -->
+      <div class="col-lg-5">
+        <div class="order-summary">
+          <div class="summary-title">📦 Order Summary</div>
+
+          <!-- Items list -->
+          <div style="margin-bottom:14px;">
+            {% for pid, item in cart.items() %}
+            <div class="summary-row" style="padding:8px 0;border-bottom:1px solid var(--sky-pale);">
+              <div class="d-flex align-items-center gap-2">
+                {% if item.image %}
+                  <img src="{{ url_for('static', filename=item.image) }}"
+                       style="width:36px;height:36px;object-fit:cover;border-radius:8px;">
+                {% else %}
+                  <div style="width:36px;height:36px;background:var(--sky-pale);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-stars" style="font-size:1rem;color:var(--sky);"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <div style="font-size:0.82rem;font-weight:600;color:var(--navy-deep);">{{ item.name }}</div>
+                  <div style="font-size:0.7rem;color:var(--text-soft);">×{{ item.quantity }}</div>
+                </div>
+              </div>
+              <span style="font-size:0.84rem;font-weight:600;">
+                UGX {{ "{:,.0f}".format(item.price * item.quantity) }}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div style="height:1px;background:var(--sky-pale);margin:12px 0;"></div>
+          <div class="summary-row"><span>Subtotal</span><span>UGX {{ "{:,.0f}".format(total) }}</span></div>
+          <div class="summary-row"><span>Delivery</span><span style="color:var(--green);font-size:0.8rem;">Confirmed via WhatsApp</span></div>
+          <div class="summary-row"><span>Discount</span><span style="color:#e85555;">—</span></div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span>UGX {{ "{:,.0f}".format(total) }}</span>
+          </div>
+
+          <button type="submit" form="checkoutForm" class="place-order-btn mt-3" id="placeOrderBtn">
+            <i class="bi bi-whatsapp"></i> Place Order &amp; Confirm on WhatsApp
+          </button>
+          <p style="font-size:0.7rem;color:var(--text-soft);text-align:center;margin-top:12px;">
+            <i class="bi bi-shield-check" style="color:var(--green);"></i>
+            Your information is 100% secure
+          </p>
+        </div>
+
+        <!-- Payment options info -->
+        <div style="background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);margin-top:14px;">
+          <h6 style="font-weight:700;color:var(--navy-deep);margin-bottom:14px;font-size:0.88rem;">
+            <i class="bi bi-phone"></i> Payment Options
+          </h6>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem;color:var(--text-mid);">
+            <div><i class="bi bi-check-circle" style="color:var(--green);"></i> &nbsp;MTN Mobile Money</div>
+            <div><i class="bi bi-check-circle" style="color:var(--green);"></i> &nbsp;Airtel Money</div>
+            <div><i class="bi bi-check-circle" style="color:var(--green);"></i> &nbsp;Cash on Delivery</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function selectPayment(el) {
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  const r = el.querySelector('input[type=radio]');
+  if (r) r.checked = true;
+}
+
+// ── CHECKOUT ACTION TOASTS ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('checkoutForm');
+  const btn = document.getElementById('placeOrderBtn');
+  
+  if (form && btn) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Show toast for order placement
+      showToast('Processing your order...', 'success');
+      
+      // Add progress indicator if needed
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+      setTimeout(() => form.submit(), 450);
+    });
+  }
+});
+</script>
+{% endblock %}
+

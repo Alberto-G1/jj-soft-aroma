@@ -1,0 +1,47 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Offers — J&J Admin{% endblock %}
+{% block page_title %}Homepage <span style="color:var(--gold);">Offers</span>{% endblock %}
+{% block content %}
+<section class="catalogue-hero polished-panel bright-panel">
+  <div>
+    <p class="admin-eyebrow">Marketing banners</p>
+    <h2>Create homepage offer cards</h2>
+    <p>These offers display on the customer home page in the two-card pattern you shared.</p>
+  </div>
+  <div class="admin-hero-actions">
+    <button class="btn btn-primary" onclick="openModal('addOfferModal')"><i class="bi bi-plus-circle"></i> Add Offer</button>
+  </div>
+</section>
+<div class="responsive-admin-grid two-col">
+  <div class="offers-admin-list">
+    {% for offer in offers %}
+      <article class="offer-preview-card offer-{{ offer.bg_color }}"><span>{{ offer.badge_text or 'OFFER' }}</span><h3>{{ offer.title }}</h3><p>{{ offer.description }}</p><div class="offer-admin-actions"><form method="POST" action="{{ url_for('admin.toggle_offer', id=offer.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline btn-sm">{{ 'Hide' if offer.is_active else 'Show' }}</button></form><form method="POST" action="{{ url_for('admin.delete_offer', id=offer.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="button" onclick="showDeleteConfirm({{ offer.title|tojson }}, this.closest('form'))" class="btn btn-danger btn-sm">Delete</button></form></div></article>
+    {% else %}<div class="glass-card empty-state-card"><i class="bi bi-percent"></i><p>No offers yet.</p></div>{% endfor %}
+  </div>
+</div>
+
+<div class="modal-overlay" id="addOfferModal" onclick="if(event.target === this) closeModal('addOfferModal')">
+  <div class="modal" style="max-width:860px;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="bi bi-plus-circle"></i> Add Offer</div>
+      <div class="modal-close" onclick="closeModal('addOfferModal')"><i class="bi bi-x-lg"></i></div>
+    </div>
+    <div class="modal-body">
+      <form method="POST" enctype="multipart/form-data" class="admin-form-stack">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid"><div class="form-group"><label class="form-label">Badge</label><input class="form-input" name="badge_text" placeholder="LIMITED TIME OFFER"></div><div class="form-group"><label class="form-label">Colour</label><select class="form-select" name="bg_color"><option value="blue">Blue</option><option value="orange">Orange</option><option value="green">Green</option></select></div></div>
+        <div class="form-group"><label class="form-label">Title *</label><input class="form-input" name="title" required placeholder="Buy 2, Get 1 FREE 🎉"></div>
+        <div class="form-group"><label class="form-label">Subtitle</label><input class="form-input" name="subtitle" placeholder="New moms special"></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="description" rows="4" placeholder="Short offer description..."></textarea></div>
+        <div class="form-grid"><div class="form-group"><label class="form-label">Button Text</label><input class="form-input" name="button_text" value="Shop the Deal"></div><div class="form-group"><label class="form-label">Button Link</label><input class="form-input" name="button_link" value="/products"></div></div>
+        <div class="form-grid"><div class="form-group"><label class="form-label">Order</label><input class="form-input" name="display_order" type="number" value="0"></div><div class="setting-row compact"><div class="setting-info"><h4>Active</h4><p>Show on home page</p></div><input type="checkbox" name="is_active" checked></div></div>
+        <div class="form-group"><label class="form-label">Optional Image</label><input class="form-input" type="file" name="image" accept="image/*"></div>
+        <div class="modal-footer" style="padding:0;margin-top:12px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('addOfferModal')">Cancel</button>
+          <button class="btn btn-primary" type="submit"><i class="bi bi-check-circle"></i> Save Offer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

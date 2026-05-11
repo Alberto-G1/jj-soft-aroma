@@ -1,0 +1,246 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Notifications — J&J Admin{% endblock %}
+{% block page_title %}Notifications <span style="color:var(--gold);">Centre</span>{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO STATS BANNER ──────────────────────────────── -->
+<section class="catalogue-hero polished-panel notif-hero-banner" style="margin-bottom:24px;">
+  <div>
+    <p class="admin-eyebrow"><i class="bi bi-bell-fill"></i> Admin Alerts</p>
+    <h2 style="margin:4px 0 6px;">Store Activity Feed</h2>
+    <p style="color:var(--text-muted);max-width:580px;">Orders, messages, stock alerts, and system updates — all in one clear, modern list.</p>
+  </div>
+  <div class="notif-stats-row">
+    <div class="notif-stat-pill">
+      <i class="bi bi-bell" style="color:var(--sky);"></i>
+      <span>{{ notifications|length }}</span>
+      <small>Total</small>
+    </div>
+    <div class="notif-stat-pill" style="background:rgba(90,170,114,0.18);border-color:rgba(90,170,114,0.3);">
+      <i class="bi bi-check-circle" style="color:var(--green);"></i>
+      <span>{{ notifications|selectattr('color','equalto','success')|list|length }}</span>
+      <small>Success</small>
+    </div>
+    <div class="notif-stat-pill" style="background:rgba(232,184,109,0.18);border-color:rgba(232,184,109,0.3);">
+      <i class="bi bi-exclamation-triangle" style="color:var(--gold);"></i>
+      <span>{{ notifications|selectattr('color','equalto','warning')|list|length }}</span>
+      <small>Warnings</small>
+    </div>
+  </div>
+</section>
+
+<!-- ── NOTIFICATION FEED ──────────────────────────────── -->
+{% if notifications %}
+<div class="notif-feed">
+  {% for notif in notifications %}
+  {% set color_map = {'success': 'var(--green)', 'danger': '#ef5350', 'warning': 'var(--gold)', 'info': 'var(--sky)'} %}
+  {% set bg_map   = {'success': 'rgba(90,170,114,0.18)', 'danger': 'rgba(239,83,80,0.15)', 'warning': 'rgba(232,184,109,0.18)', 'info': 'rgba(168,216,234,0.15)'} %}
+  <article class="notif-feed-card">
+    <!-- Icon -->
+    <div class="notif-feed-icon" style="background:{{ bg_map.get(notif.color,'rgba(168,216,234,0.15)') }};color:{{ color_map.get(notif.color,'var(--sky)') }};">
+      <i class="bi bi-{{ notif.icon or 'bell' }}"></i>
+    </div>
+
+    <!-- Content -->
+    <div class="notif-feed-body">
+      <div class="notif-feed-title">{{ notif.title }}</div>
+      <div class="notif-feed-msg">{{ notif.message }}</div>
+      <time class="notif-feed-time">
+        <i class="bi bi-clock"></i>
+        {{ notif.created_at.strftime('%d %b %Y • %H:%M') }}
+      </time>
+    </div>
+
+    <!-- Color stripe -->
+    <div class="notif-stripe" style="background:{{ color_map.get(notif.color,'var(--sky)') }};"></div>
+
+    <!-- Actions -->
+    <div class="notif-feed-actions">
+      {% if notif.link %}
+        <a href="{{ notif.link }}" class="btn btn-outline btn-sm">
+          <i class="bi bi-eye"></i> View
+        </a>
+      {% endif %}
+      <form action="{{ url_for('admin.delete_notification', id=notif.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="button"
+                onclick="showDeleteConfirm({{ notif.title|tojson }}, this.closest('form'))"
+                class="btn btn-danger btn-sm">
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="notif-empty-state">
+  <div class="notif-empty-icon">
+    <i class="bi bi-bell-slash"></i>
+  </div>
+  <h3>All Clear!</h3>
+  <p>No notifications yet. They'll appear here when there's store activity — new orders, stock alerts, messages, and more.</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* ── NOTIFICATIONS PAGE STYLES ─────────────────────────── */
+.notif-hero-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 28px 32px;
+}
+.notif-stats-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.notif-stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 22px;
+  border-radius: 18px;
+  background: rgba(168,216,234,0.15);
+  border: 1px solid rgba(168,216,234,0.25);
+  min-width: 80px;
+  text-align: center;
+}
+.notif-stat-pill i { font-size: 1.3rem; }
+.notif-stat-pill span { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+.notif-stat-pill small { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+
+.notif-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.notif-feed-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(168,216,234,0.16);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  overflow: hidden;
+}
+.notif-feed-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.26);
+}
+
+.notif-stripe {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 22px 0 0 22px;
+}
+
+.notif-feed-icon {
+  width: 52px; height: 52px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.notif-feed-body {
+  flex: 1;
+  min-width: 0;
+}
+.notif-feed-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.notif-feed-msg {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.notif-feed-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.notif-feed-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Empty state */
+.notif-empty-state {
+  text-align: center;
+  padding: 80px 40px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(168,216,234,0.14);
+  border-radius: 30px;
+  backdrop-filter: blur(14px);
+}
+.notif-empty-icon {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: rgba(168,216,234,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+  color: var(--sky);
+  margin: 0 auto 24px;
+}
+.notif-empty-state h3 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.notif-empty-state p {
+  color: var(--text-muted);
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+@media (max-width: 680px) {
+  .notif-feed-card {
+    flex-wrap: wrap;
+    padding: 16px 20px;
+  }
+  .notif-feed-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .notif-hero-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+}
+</style>
+{% endblock %}

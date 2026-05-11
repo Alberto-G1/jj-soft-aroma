@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" id="htmlRoot">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin — J&J Soft Aroma{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}"> 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-style.css') }}">
+  <script>
+    // Initialize theme on page load
+    (function() {
+      const savedTheme = localStorage.getItem('admin-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-wordmark">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="admin-logo-img" alt="J&J"> <span>J&J Admin</span>
+      </div>
+      <div class="logo-sub">Command Centre</div>
+    </div>
+    <div class="sidebar-search">
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Search...">
+    </div>
+
+    <div class="nav-section-label">Store</div>
+    <a class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}"
+       href="{{ url_for('admin.dashboard') }}">
+      <i class="bi bi-pie-chart"></i> Dashboard
+    </a>
+    <a class="nav-item {% if 'product' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.products') }}">
+      <i class="bi bi-box-seam"></i> Products
+    </a>
+    <a class="nav-item {% if 'categor' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.categories') }}">
+      <i class="bi bi-tags"></i> Categories
+    </a>
+    <a class="nav-item {% if 'offer' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.offers') }}">
+      <i class="bi bi-percent"></i> Offers
+    </a>
+    <a class="nav-item {% if 'order' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.orders') }}">
+      <i class="bi bi-receipt"></i> Orders
+      {% if pending_orders_count %}
+        <span class="nav-badge">{{ pending_orders_count }}</span>
+      {% endif %}
+    </a>
+    <a class="nav-item {% if 'customer' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.customers') }}">
+      <i class="bi bi-people"></i> Customers
+    </a>
+    <a class="nav-item {% if 'review' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.reviews') }}">
+      <i class="bi bi-chat-heart"></i> Reviews
+    </a>
+    <a class="nav-item {% if 'notification' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.notifications') }}">
+      <i class="bi bi-bell"></i> Notifications
+      <span id="sidebar-notif-count" class="nav-badge" style="display:none;"></span>
+    </a>
+    <a class="nav-item {% if 'setting' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('admin.settings') }}">
+      <i class="bi bi-sliders"></i> Settings
+    </a>
+
+    <hr style="border-color:var(--divider);margin:12px 12px 0;">
+    <a class="nav-item" href="{{ url_for('customer.home') }}" target="_blank">
+      <i class="bi bi-eye"></i> View Site
+    </a>
+    <a class="nav-item text-danger" href="{{ url_for('admin.logout') }}">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="admin-profile" onclick="openModal('profileModal')">
+        <div class="admin-avatar">{{ current_user.username[0].upper() }}</div>
+        <div class="admin-info">
+          <div class="admin-name">{{ current_user.username }}</div>
+          <div class="admin-role">Administrator</div>
+        </div>
+        <i class="bi bi-three-dots-vertical"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-toggle" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </div>
+      <div class="topbar-title" id="topbarTitle">
+        {% block page_title %}Dashboard{% endblock %}
+      </div>
+      <div class="topbar-actions">
+        <div class="topbar-btn" onclick="toggleNotif()" title="Notifications">
+          <i class="bi bi-bell"></i>
+          <span class="notif-dot" id="notifDot"></span>
+        </div>
+        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
+      </div>
+      <!-- Notification panel -->
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-header">
+          <span class="notif-title">Notifications</span>
+          <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="clearNotifs()">Mark all read</span>
+        </div>
+        <div class="notif-item">
+            <div class="notif-icon-wrap" style="background:var(--badge-green);color:var(--green);"><i class="bi bi-check"></i></div>
+          <div class="notif-body"><div class="notif-text">Order #1001 delivered</div><div class="notif-time">2 min ago</div></div>
+          <div class="notif-unread"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- WELCOME SECTION -->
+      <div class="welcome-section" id="welcomeSection">
+        <div class="welcome-greeting">
+          <h2 id="welcomeGreeting">Welcome back, <span style="color:var(--gold);">{{ current_user.username }}</span>!</h2>
+          <p id="welcomeDate" style="color:var(--text-muted); margin:0; font-size:12px; margin-top:4px;">Loading date...</p>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="glass-card" style="padding:16px; margin-bottom:16px; border-left:4px solid {% if category == 'success' %}var(--green){% else %}var(--gold){% endif %};">
+              <i class="bi bi-info-circle"></i> {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- CUSTOM DELETE CONFIRMATION MODAL -->
+<div class="modal-overlay" id="deleteConfirmModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="bi bi-exclamation-triangle" style="color:#ef5350;"></i> Confirm Delete</div>
+      <div class="modal-close" onclick="cancelDelete()"><i class="bi bi-x-lg"></i></div>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-muted); margin-bottom:8px;">Are you sure you want to delete:</p>
+      <p id="deleteItemName" style="font-weight:600; color:var(--text-primary); font-size:15px; margin-bottom:16px; padding:12px; background:rgba(239,83,80,0.1); border-radius:8px; border-left:3px solid #ef5350;"></p>
+      <p style="color:var(--text-muted); font-size:13px;">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cancelDelete()">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="performDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">My Profile</div>
+      <div class="modal-close" onclick="closeModal('profileModal')"><i class="bi bi-x-lg"></i></div>
+    </div>
+    <div class="modal-body text-center">
+      <div class="admin-avatar" style="width:72px;height:72px;font-size:32px;margin:0 auto 16px;">{{ current_user.username[0].upper() }}</div>
+      <div style="font-size:22px;font-weight:600;color:var(--text-primary);">{{ current_user.username }}</div>
+      <div style="color:var(--text-muted);">Administrator</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('profileModal')">Close</button>
+      <a href="{{ url_for('admin.logout') }}" class="btn btn-danger">Logout</a>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='admin/js/admin-script.js') }}"></script>
+<script>
+  // init notification dot from server
+  const notifDot = document.getElementById('notifDot');
+  fetch('{{ url_for("admin.notification_count") }}')
+    .then(r => r.json())
+    .then(data => {
+      if (data.count > 0) notifDot.style.display = 'block';
+      else notifDot.style.display = 'none';
+    }).catch(()=>{});
+
+  // mark all read (simulate)
+  function clearNotifs() {
+    document.querySelectorAll('.notif-unread').forEach(d => d.remove());
+    notifDot.style.display = 'none';
+    showToast('success','Done','Notifications marked as read.');
+  }
+
+  // Update welcome message and date
+  function updateWelcome() {
+    const greeting = document.getElementById('welcomeGreeting');
+    const dateEl = document.getElementById('welcomeDate');
+    
+    if (!greeting || !dateEl) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    const username = '{{ current_user.username }}';
+    
+    let greetingText = 'Welcome back';
+    if (hour < 12) greetingText = 'Good morning';
+    else if (hour < 18) greetingText = 'Good afternoon';
+    else greetingText = 'Good evening';
+    
+    greeting.innerHTML = greetingText + ', <span style="color:var(--gold);">' + username + '</span>!';
+    
+    // Format date
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateStr = now.toLocaleDateString('en-US', options);
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    dateEl.textContent = dateStr + ' • ' + timeStr;
+  }
+  
+  updateWelcome();
+  setInterval(updateWelcome, 1000);
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

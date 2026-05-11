@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt — Order #{{ order.id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-style.css') }}">
+  <style>
+    body { background:var(--cream); color:var(--text-primary); font-family:'Poppins',sans-serif; padding:20px; max-width:400px; margin:0 auto; }
+    .print-hide { text-align:center; margin-bottom:20px; }
+    @media print { .print-hide { display:none; } }
+  </style>
+</head>
+<body>
+  <div class="print-hide">
+    <button onclick="window.print()" class="btn btn-primary">Print</button>
+    <button onclick="window.close()" class="btn btn-ghost">Close</button>
+  </div>
+  <div style="text-align:center; margin-bottom:20px;">
+    <h2 style="color:var(--navy);">J&J Soft Aroma</h2>
+    <p>Baby Perfumes & Products</p>
+    <p>Kampala, Uganda | 0760868005</p>
+    <hr style="border-color:var(--divider);">
+    <h3>ORDER RECEIPT</h3>
+    <p>Order JJ-{{ "%04d" % order.id }} — {{ order.created_at.strftime('%d %b %Y %H:%M') }}</p>
+  </div>
+  <div>
+    <strong>Customer:</strong> {{ order.customer_name }}<br>
+    <strong>Phone:</strong> {{ order.phone }}<br>
+    <strong>Delivery:</strong> {{ order.location }}<br>
+    {% if order.delivery_notes %} <strong>Note:</strong> {{ order.delivery_notes }}<br> {% endif %}
+  </div>
+  <hr style="border-color:var(--divider);">
+  <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+    <thead><tr><th style="text-align:left;">Product</th><th>Qty</th><th style="text-align:right;">Amount</th></tr></thead>
+    <tbody>
+      {% for item in order.items %}
+      <tr>
+        <td>{{ item.product.name if item.product else 'Product' }}</td>
+        <td style="text-align:center;">{{ item.quantity }}</td>
+        <td style="text-align:right;">UGX {{ "{:,.0f}".format(item.unit_price * item.quantity) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <hr style="border-color:var(--divider);">
+  <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:700;">
+    <span>TOTAL</span>
+    <span>UGX {{ "{:,.0f}".format(order.total_price) }}</span>
+  </div>
+  <p style="text-align:center; margin-top:30px; color:var(--text-muted);">Thank you for shopping with us!</p>
+  <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>

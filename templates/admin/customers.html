@@ -1,0 +1,77 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Customers — J&J Admin{% endblock %}
+{% block page_title %}Customers <span style="color:var(--gold);">Directory</span>{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  <div style="padding:16px; border-bottom:1px solid var(--divider);">
+    <form method="GET" style="display:flex; gap:12px; align-items:center;">
+      <input type="text" name="search" class="form-input" placeholder="Search customers..." value="{{ search }}" style="flex:1;">
+      <button type="submit" class="btn btn-ghost"><i class="bi bi-search"></i> Search</button>
+      {% if search %}<a href="{{ url_for('admin.customers') }}" class="btn btn-ghost">Clear</a>{% endif %}
+    </form>
+  </div>
+
+  {% if customers %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Location</th>
+          <th>Orders</th>
+          <th>Total Spent</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="cust-avatar" style="width:40px;height:40px;font-size:16px; background: {% set colors = ['#6366f1','#4caf88','#2e7bbf','#f59e0b','#e91e8c','#ef5350'] %}{{ colors[loop.index0 % colors|length] }};">
+                {{ customer.name[:2].upper() }}
+              </div>
+              <span class="fw-semibold">{{ customer.name }}</span>
+            </div>
+          </td>
+          <td>{{ customer.phone }}</td>
+          <td>{{ customer.location or '—' }}</td>
+          <td>{{ customer_stats[customer.id].order_count }}</td>
+          <td style="font-family:'Poppins',sans-serif;font-weight:700; color:var(--navy);">UGX {{ "{:,.0f}".format(customer_stats[customer.id].total_spent) }}</td>
+          <td style="font-size:12px;color:var(--text-muted);">{{ customer.created_at.strftime('%b %Y') }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="https://wa.me/256{{ customer.phone.lstrip('0') }}" target="_blank" class="btn btn-ghost btn-sm" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+              <a href="tel:{{ customer.phone }}" class="btn btn-ghost btn-sm" title="Call"><i class="bi bi-telephone"></i></a>
+              <a href="{{ url_for('admin.orders') }}?search={{ customer.phone }}" class="btn btn-ghost btn-sm" title="View orders"><i class="bi bi-receipt"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer summary -->
+  <div style="padding:16px; border-top:1px solid var(--divider); display:flex; justify-content:space-between; align-items:center;">
+    <span style="color:var(--text-muted); font-size:0.9rem;">
+      {{ customers | length }} customer{{ 's' if customers | length != 1 }}
+      {% if search %} found for "{{ search }}"{% endif %}
+    </span>
+    <span style="color:var(--text-muted); font-size:0.9rem;">
+      Total revenue:
+      <strong style="color:var(--navy);">UGX {{ "{:,.0f}".format(customer_stats.values() | sum(attribute='total_spent')) }}</strong>
+    </span>
+  </div>
+
+  {% else %}
+  <div style="padding:60px; text-align:center; color:var(--text-muted);">
+    <i class="bi bi-people" style="font-size:40px;"></i>
+    <p>No customers found.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

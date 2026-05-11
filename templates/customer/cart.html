@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% block title %}Cart — J&amp;J Soft Aroma{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="container page-hero-content">
+    <div class="breadcrumb-custom mb-3">
+      <a href="{{ url_for('customer.home') }}">Home</a>
+      <span class="sep">›</span>
+      <span class="crumb-current">Shopping Cart</span>
+    </div>
+    <h1>Your <em style="color:var(--sky);">Cart</em></h1>
+  </div>
+</div>
+
+<section style="padding:60px 0 80px;">
+  <div class="container">
+
+    {% if cart %}
+    <div class="row g-4">
+
+      <!-- ── CART ITEMS ──────────────────────────── -->
+      <div class="col-lg-8">
+        <div class="cart-table-wrap">
+          <div class="table-responsive">
+            <table class="cart-table">
+              <thead>
+                <tr>
+                  <th style="padding-left:24px;">Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Subtotal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for pid, item in cart.items() %}
+                <tr>
+                  <td style="padding-left:24px;">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="cart-product-img">
+                        {% if item.image %}
+                          <img src="{{ url_for('static', filename=item.image) }}"
+                               alt="{{ item.name }}">
+                        {% else %}
+                          <i class="bi bi-stars" style="font-size:1.4rem;color:var(--sky);"></i>
+                        {% endif %}
+                      </div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:700;color:var(--navy-deep);">
+                          {{ item.name }}
+                        </div>
+                        <div style="font-size:0.72rem;color:var(--text-soft);">J&amp;J Soft Aroma</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-size:0.86rem;color:var(--text-mid);">
+                    UGX {{ "{:,.0f}".format(item.price|float) }}
+                  </td>
+                  <td>
+                    <form action="{{ url_for('customer.update_cart', product_id=pid) }}"
+                          method="POST"
+                          class="d-flex align-items-center">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <div class="qty-control" style="transform:scale(0.9);transform-origin:left;">
+                        <button type="button" class="qty-btn"
+                                onclick="let i=this.nextElementSibling;i.value=Math.max(1,parseInt(i.value)-1);this.closest('form').submit();">−</button>
+                        <input type="number" name="quantity"
+                               value="{{ item.quantity }}" min="1"
+                               class="qty-input"
+                               onchange="this.closest('form').submit()">
+                        <button type="button" class="qty-btn"
+                                onclick="let i=this.previousElementSibling;i.value=parseInt(i.value)+1;this.closest('form').submit();">+</button>
+                      </div>
+                    </form>
+                  </td>
+                  <td style="font-weight:700;color:var(--green);">
+                    UGX {{ "{:,.0f}".format((item.price|float) * (item.quantity|int)) }}
+                  </td>
+                  <td>
+                    <form action="{{ url_for('customer.remove_from_cart', product_id=pid) }}"
+                          method="POST"
+                          class="cart-action-form"
+                          data-action="remove"
+                          data-product="{{ item.name }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="cart-remove" title="Remove item">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Cart footer actions -->
+          <div style="padding:18px 24px;display:flex;gap:12px;flex-wrap:wrap;">
+            <a href="{{ url_for('customer.products') }}" class="btn-outline-custom"
+               style="font-size:0.82rem;padding:9px 18px;">
+              <i class="bi bi-arrow-left"></i> Continue Shopping
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ORDER SUMMARY ───────────────────────── -->
+      <div class="col-lg-4">
+        <div class="order-summary">
+          <div class="summary-title">📦 Order Summary</div>
+
+          {% set item_count = cart.values() | sum(attribute='quantity') %}
+          <div class="summary-row">
+            <span>Items ({{ item_count }})</span>
+            <span>UGX {{ "{:,.0f}".format(total) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Delivery</span>
+            <span style="color:var(--green);font-size:0.82rem;">Confirmed via WhatsApp</span>
+          </div>
+
+          <div style="height:1px;background:var(--sky-pale);margin:14px 0;"></div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span>UGX {{ "{:,.0f}".format(total) }}</span>
+          </div>
+
+          <!-- Promo code -->
+          <div class="d-flex gap-2 mt-3">
+            <input type="text" class="promo-input" placeholder="Promo code…">
+            <button class="btn-apply">Apply</button>
+          </div>
+
+          <a href="{{ url_for('customer.checkout') }}" class="btn-checkout">
+            <i class="bi bi-lock"></i> Proceed to Checkout
+          </a>
+
+          <!-- WhatsApp alternative -->
+          <a href="https://wa.me/256760868005?text=Hello+J%26J+Soft+Aroma%2C+I+have+items+in+my+cart+worth+UGX+{{ total | int }}+and+I+want+to+order."
+             target="_blank"
+             class="wa-share-btn w-100 justify-content-center mt-2"
+             style="padding:10px;">
+            <i class="bi bi-whatsapp"></i> Order via WhatsApp Instead
+          </a>
+
+          <!-- Trust signals -->
+          <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--sky-pale);">
+            <div style="font-size:0.74rem;color:var(--text-soft);display:flex;flex-direction:column;gap:7px;">
+              <span><i class="bi bi-shield-check" style="color:var(--green);"></i> &nbsp;Baby-safe, tested products</span>
+              <span><i class="bi bi-truck" style="color:var(--sky);"></i> &nbsp;Fast delivery to your door</span>
+              <span><i class="bi bi-arrow-counterclockwise" style="color:var(--gold);"></i> &nbsp;Easy returns on all orders</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /row -->
+
+    {% else %}
+    <!-- EMPTY CART -->
+    <div class="text-center py-5">
+      <div style="font-size:5.5rem;margin-bottom:20px;">🛒</div>
+      <h4 style="color:var(--navy-deep);font-weight:700;margin-bottom:10px;">Your cart is empty</h4>
+      <p style="color:var(--text-soft);margin-bottom:28px;max-width:380px;margin-left:auto;margin-right:auto;">
+        Looks like you haven't added anything yet. Here are some products to get you started!
+      </p>
+      <a href="{{ url_for('customer.products') }}" class="btn-primary-custom">
+        <i class="bi bi-bag"></i> Browse All Products
+      </a>
+
+      <!-- Featured suggestions -->
+      {% if featured %}
+      <div class="mt-5">
+        <h5 style="font-weight:700;color:var(--navy-deep);margin-bottom:24px;">
+          <i class="bi bi-star" style="color:var(--gold);"></i> You Might Like These
+        </h5>
+        {% from 'macros.html' import product_card %}
+        <div class="row g-3 justify-content-center">
+          {% for product in featured %}
+          <div class="col-6 col-md-3">
+            {{ product_card(product) }}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── CART ACTION TOASTS ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.cart-action-form').forEach(form => {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const productName = form.getAttribute('data-product');
+      const action = form.getAttribute('data-action');
+      
+      if (action === 'remove') {
+        showToast(`${productName} removed from cart`, 'success');
+        setTimeout(() => form.submit(), 450);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+

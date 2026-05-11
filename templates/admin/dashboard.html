@@ -1,0 +1,415 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Dashboard — J&J Admin{% endblock %}
+{% block page_title %}Dashboard <span style="color:var(--gold);">Overview</span>{% endblock %}
+
+{% block content %}
+<!-- STAT CARDS -->
+<div class="stats-grid">
+  <div class="stat-card" style="background: linear-gradient(135deg, var(--navy-deep), var(--navy)); color: #fff;">
+    <div class="stat-top" style="color:inherit;">
+      <div class="stat-icon sky" style="background: rgba(255,255,255,0.2); color: #fff;"><i class="bi bi-box-seam"></i></div>
+    </div>
+    <div class="stat-value" style="color:inherit;">{{ total_products }}</div>
+    <div class="stat-label" style="color:rgba(255,255,255,0.8);">Products</div>
+  </div>
+  <div class="stat-card" style="background: linear-gradient(135deg, var(--green), #2e7d32); color: #fff;">
+    <div class="stat-top" style="color:inherit;">
+      <div class="stat-icon green" style="background: rgba(255,255,255,0.2); color: #fff;"><i class="bi bi-receipt"></i></div>
+    </div>
+    <div class="stat-value" style="color:inherit;">{{ total_orders }}</div>
+    <div class="stat-label" style="color:rgba(255,255,255,0.8);">Orders</div>
+  </div>
+  <div class="stat-card" style="background: linear-gradient(135deg, var(--gold), #f59e0b); color: #fff;">
+    <div class="stat-top" style="color:inherit;">
+      <div class="stat-icon gold" style="background: rgba(255,255,255,0.2); color: #fff;"><i class="bi bi-clock"></i></div>
+    </div>
+    <div class="stat-value" style="color:inherit;">{{ pending_orders }}</div>
+    <div class="stat-label" style="color:rgba(255,255,255,0.8);">Pending</div>
+  </div>
+  <div class="stat-card" style="background: linear-gradient(135deg, #5c6bc0, #3949ab); color: #fff;">
+    <div class="stat-top" style="color:inherit;">
+      <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: #fff;"><i class="bi bi-coin"></i></div>
+    </div>
+    <div class="stat-value" style="color:inherit;">UGX {{ "{:,.0f}".format(total_revenue) }}</div>
+    <div class="stat-label" style="color:rgba(255,255,255,0.8);">Revenue</div>
+  </div>
+  <div class="stat-card" style="background: linear-gradient(135deg, #f48fb1, #e91e8c); color: #fff;">
+    <div class="stat-top" style="color:inherit;">
+      <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: #fff;"><i class="bi bi-people"></i></div>
+    </div>
+    <div class="stat-value" style="color:inherit;">{{ total_customers }}</div>
+    <div class="stat-label" style="color:rgba(255,255,255,0.8);">Customers</div>
+  </div>
+</div>
+
+<!-- DASHBOARD CLOCK & DATE -->
+<div class="dashboard-time-section">
+  <div class="time-content">
+    <div class="time-icon">
+      <i class="bi bi-clock"></i>
+    </div>
+    <div class="time-info">
+      <h3>Current Time</h3>
+      <p class="time-display" id="dashboardClock">--:--:--</p>
+      <p class="time-meta" id="dashboardDate">Loading...</p>
+    </div>
+  </div>
+  <div class="time-actions">
+    <button class="btn btn-sm" onclick="refreshDashboard()" title="Refresh dashboard">
+      <i class="bi bi-arrow-repeat"></i> Refresh
+    </button>
+  </div>
+</div>
+
+<!-- ALERTS -->
+{% if low_stock %}
+<div class="glass-card" style="padding:16px; margin-bottom:22px; border-left:4px solid var(--gold); display:flex; align-items:center; gap:12px;">
+  <i class="bi bi-exclamation-triangle" style="color:var(--gold); font-size:1.2rem;"></i>
+  <div>
+    <strong>Low stock alert!</strong>
+    {% for p in low_stock %}
+      <span class="badge pending" style="margin-left:6px;">{{ p.name }} ({{ p.stock }} left)</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if pending_reviews > 0 %}
+<div class="glass-card" style="padding:16px; margin-bottom:22px; border-left:4px solid var(--sky); display:flex; align-items:center; gap:12px;">
+  <i class="bi bi-chat-heart" style="color:var(--sky); font-size:1.2rem;"></i>
+  <div>
+    <strong>{{ pending_reviews }} review{{ 's' if pending_reviews != 1 }} waiting for approval!</strong>
+    <a href="{{ url_for('admin.reviews') }}" class="btn btn-sm btn-ghost" style="margin-left:10px;">Review Now</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- QUICK ACTIONS -->
+<div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:28px;">
+  <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary" style="flex:1; flex-direction:column; gap:6px; padding:20px;">
+    <i class="bi bi-plus-circle fs-4"></i>
+    <span class="small">Add Product</span>
+  </a>
+  <a href="{{ url_for('admin.orders') }}" class="btn btn-ghost" style="flex:1; flex-direction:column; gap:6px; padding:20px; border-color: var(--gold);">
+    <i class="bi bi-receipt fs-4" style="color:var(--gold);"></i>
+    <span class="small">View Orders</span>
+  </a>
+  <a href="{{ url_for('admin.customers') }}" class="btn btn-ghost" style="flex:1; flex-direction:column; gap:6px; padding:20px; border-color: var(--sky);">
+    <i class="bi bi-people fs-4" style="color:var(--sky);"></i>
+    <span class="small">Customers</span>
+  </a>
+  <a href="{{ url_for('admin.reviews') }}" class="btn btn-ghost" style="flex:1; flex-direction:column; gap:6px; padding:20px; border-color: var(--green);">
+    <i class="bi bi-chat-heart fs-4" style="color:var(--green);"></i>
+    <span class="small">Reviews</span>
+  </a>
+</div>
+
+<!-- CHARTS ROW 1 -->
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:22px; margin-bottom:22px;">
+  <!-- Orders Overview -->
+  <div class="glass-card">
+    <div class="card-header" style="justify-content: space-between;">
+      <div class="card-title"><i class="bi bi-bar-chart"></i> Orders Overview</div>
+      <div id="ordersPeriodBtns" style="display:flex; gap:6px;">
+        <button class="btn btn-ghost btn-sm active" onclick="loadChart('7',this)">7 Days</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadChart('30',this)">30 Days</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadChart('90',this)">3 Months</button>
+      </div>
+    </div>
+    <div style="padding:20px;">
+      <div style="position:relative; width:100%; height:260px;">
+        <canvas id="ordersChart" style="width:100%; height:100%;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Status Doughnut -->
+  <div class="glass-card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-pie-chart"></i> Order Status</div>
+    </div>
+    <div style="padding:20px; display:flex; justify-content:center; align-items:center;">
+      <div style="position:relative; width:100%; max-width:300px; height:300px;">
+        <canvas id="statusChart" style="width:100%; height:100%;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHARTS ROW 2 -->
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:22px; margin-bottom:22px;">
+  <!-- Revenue Line Chart -->
+  <div class="glass-card">
+    <div class="card-header" style="justify-content: space-between;">
+      <div class="card-title" id="revenueChartTitle"><i class="bi bi-graph-up-arrow"></i> Revenue (Last 7 Days)</div>
+      <div id="revenuePeriodBtns" style="display:flex; gap:6px;">
+        <button class="btn btn-ghost btn-sm active" onclick="loadRevenueChart('7',this)">7 Days</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadRevenueChart('30',this)">30 Days</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadRevenueChart('90',this)">3 Months</button>
+      </div>
+    </div>
+    <div style="padding:20px;">
+      <div style="position:relative; width:100%; height:260px;">
+        <canvas id="revenueChart" style="width:100%; height:100%;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Products Horizontal Bar -->
+  <div class="glass-card">
+    <div class="card-header">
+      <div class="card-title"><i class="bi bi-trophy"></i> Top Products by Orders</div>
+    </div>
+    <div style="padding:20px;">
+      <canvas id="productsChart" height="150" style="width:100%;"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- RECENT ORDERS TABLE -->
+<div class="glass-card">
+  <div class="card-header">
+    <div class="card-title"><i class="bi bi-clock-history"></i> Recent Orders</div>
+    <a href="{{ url_for('admin.orders') }}" class="card-action">View All <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="table-wrap">
+    {% if recent_orders %}
+    <table>
+      <thead>
+        <tr>
+          <th class="ps-3">Order #</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Location</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr>
+          <td class="ps-3"><span class="order-id">JJ-{{ "%04d" | format(order.id) }}</span></td>
+          <td class="fw-semibold">{{ order.customer_name }}</td>
+          <td class="text-muted small">{{ order.phone }}</td>
+          <td class="text-muted small">{{ order.location }}</td>
+          <td class="fw-semibold" style="color:var(--green);">UGX {{ "{:,.0f}".format(order.total_price) }}</td>
+          <td>
+            {% if order.status == 'pending' %}
+              <span class="badge pending"><i class="bi bi-circle" style="font-size:0.5rem; margin-right:4px;"></i> Pending</span>
+            {% elif order.status == 'confirmed' %}
+              <span class="badge confirmed"><i class="bi bi-circle" style="font-size:0.5rem; margin-right:4px;"></i> Confirmed</span>
+            {% elif order.status == 'processing' %}
+              <span class="badge processing"><i class="bi bi-circle" style="font-size:0.5rem; margin-right:4px;"></i> Processing</span>
+            {% elif order.status == 'delivered' %}
+              <span class="badge delivered"><i class="bi bi-circle" style="font-size:0.5rem; margin-right:4px;"></i> Delivered</span>
+            {% elif order.status == 'cancelled' %}
+              <span class="badge cancelled"><i class="bi bi-circle" style="font-size:0.5rem; margin-right:4px;"></i> Cancelled</span>
+            {% else %}
+              <span class="badge">{{ order.status }}</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ order.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <a href="{{ url_for('admin.order_detail', id=order.id) }}" class="btn btn-ghost btn-sm"><i class="bi bi-eye"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:40px; text-align:center; color:var(--text-muted);">
+      <i class="bi bi-inbox" style="font-size:2rem; margin-bottom:10px;"></i>
+      <p>No orders yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  const ordersData   = {{ orders_by_day | tojson }};
+  const revenueData  = {{ revenue_by_day | tojson }};
+  const statusData   = {{ status_counts | tojson }};
+  const topProducts  = {{ top_products | tojson }};
+
+  // 1. Orders bar chart
+  let ordersChart;
+  function buildOrdersChart(data) {
+    if (ordersChart) ordersChart.destroy();
+    const ctx = document.getElementById('ordersChart').getContext('2d');
+    ordersChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          label: 'Orders',
+          data: data.map(d => d.count),
+          backgroundColor: 'rgba(44,95,122,0.75)',
+          borderColor: '#2c5f7a',
+          borderWidth: 1,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(44,95,122,0.1)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+  buildOrdersChart(ordersData['7']);
+
+  function loadChart(period, btn) {
+    buildOrdersChart(ordersData[period]);
+    btn.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // 2. Status doughnut
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: statusData.map(d => d.status),
+      datasets: [{
+        data: statusData.map(d => d.count),
+        backgroundColor: [
+          '#fff3cd', '#cfe2ff', '#d1ecf1', '#d4edda', '#f8d7da'
+        ],
+        borderColor: [
+          '#f59e0b', '#5bb8f5', '#17a2b8', '#4caf88', '#ef5350'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { padding: 12, boxWidth: 12, font: { size: 12 } } } },
+      cutout: '65%'
+    }
+  });
+
+  // 3. Revenue line
+  let revenueChart;
+  function buildRevenueChart(data) {
+    if (revenueChart) revenueChart.destroy();
+    revenueChart = new Chart(document.getElementById('revenueChart'), {
+      type: 'line',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          label: 'Revenue (UGX)',
+          data: data.map(d => d.total),
+          borderColor: '#5aaa72',
+          backgroundColor: 'rgba(90,170,114,0.1)',
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#5aaa72',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(44,95,122,0.1)' }, ticks: { callback: v => 'UGX ' + v.toLocaleString() } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function loadRevenueChart(period, btn) {
+    buildRevenueChart(revenueData[period] || []);
+    btn.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const titleMap = {
+      '7': 'Revenue (Last 7 Days)',
+      '30': 'Revenue (Last 30 Days)',
+      '90': 'Revenue (Last 3 Months)'
+    };
+    const titleEl = document.getElementById('revenueChartTitle');
+    if (titleEl) {
+      titleEl.innerHTML = '<i class="bi bi-graph-up-arrow"></i> ' + (titleMap[period] || 'Revenue');
+    }
+  }
+
+  buildRevenueChart(revenueData['7'] || []);
+
+  // 4. Top products horizontal bar
+  new Chart(document.getElementById('productsChart'), {
+    type: 'bar',
+    data: {
+      labels: topProducts.map(d => d.name),
+      datasets: [{
+        label: 'Units Sold',
+        data: topProducts.map(d => d.total),
+        backgroundColor: [
+          'rgba(99,102,241,0.75)',
+          'rgba(76,175,136,0.75)',
+          'rgba(245,158,11,0.75)',
+          'rgba(44,95,122,0.75)',
+          'rgba(233,30,140,0.75)',
+        ],
+        borderRadius: 6,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(44,95,122,0.1)' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Dashboard Clock & Date Update
+  function updateDashboardTime() {
+    const clockEl = document.getElementById('dashboardClock');
+    const dateEl = document.getElementById('dashboardDate');
+    
+    if (!clockEl || !dateEl) return;
+    
+    const now = new Date();
+    
+    // Format time HH:MM:SS
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    clockEl.textContent = hours + ':' + minutes + ':' + seconds;
+    
+    // Format date: Tuesday, May 1, 2026
+    const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+    const dateStr = now.toLocaleDateString('en-US', options);
+    
+    dateEl.textContent = dateStr;
+  }
+  
+  // Update immediately
+  updateDashboardTime();
+  
+  // Update every second
+  setInterval(updateDashboardTime, 1000);
+  
+  // Refresh dashboard function
+  function refreshDashboard() {
+    location.reload();
+  }
+</script>
+{% endblock %}
+

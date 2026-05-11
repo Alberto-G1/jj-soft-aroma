@@ -1,0 +1,62 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Reviews — J&J Admin{% endblock %}
+{% block page_title %}Reviews <span style="color:var(--gold);">Management</span>{% endblock %}
+
+{% block content %}
+<!-- PENDING -->
+<h4 style="color:var(--gold); margin-bottom:16px;"><i class="bi bi-clock"></i> Pending Approval ({{ pending | length }})</h4>
+{% if pending %}
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:30px;">
+  {% for review in pending %}
+  <div class="glass-card" style="border-left:4px solid var(--gold);">
+    <div style="padding:20px;">
+      <div style="color:var(--gold); margin-bottom:8px;">
+        {% for i in range(review.rating) %}<i class="bi bi-star"></i>{% endfor %}
+      </div>
+      <p style="color:var(--text-primary); font-style:italic;">"{{ review.message }}"</p>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+        <div class="cust-avatar" style="width:36px;height:36px;font-size:14px;">{{ review.name[0].upper() }}</div>
+        <div>
+          <div class="fw-semibold">{{ review.name }}</div>
+          <div style="color:var(--text-muted); font-size:11px;">{{ review.role or '' }}</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <form action="{{ url_for('admin.approve_review', id=review.id) }}" method="POST" style="flex:1;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check"></i> Approve</button>
+        </form>
+        <form action="{{ url_for('admin.reject_review', id=review.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p style="color:var(--text-muted);">No pending reviews.</p>
+{% endif %}
+
+<!-- APPROVED -->
+<h4 style="color:var(--green); margin-bottom:16px;"><i class="bi bi-check-circle"></i> Approved ({{ approved | length }})</h4>
+{% if approved %}
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+  {% for review in approved %}
+  <div class="glass-card" style="border-left:4px solid var(--green);">
+    <div style="padding:20px;">
+      <div style="color:var(--gold); margin-bottom:8px;">
+        {% for i in range(review.rating) %}<i class="bi bi-star"></i>{% endfor %}
+      </div>
+      <p style="color:var(--text-primary); font-style:italic;">"{{ review.message }}"</p>
+      <div class="cust-avatar" style="width:36px;height:36px;font-size:14px;">{{ review.name[0].upper() }}</div>
+      <span>{{ review.name }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p style="color:var(--text-muted);">No approved reviews.</p>
+{% endif %}
+{% endblock %}

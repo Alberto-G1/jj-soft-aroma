@@ -1,0 +1,265 @@
+<!-- templates/admin/login.html -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — J&J Soft Aroma</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-style.css') }}">
+  <style>
+    /* Full viewport split layout */
+    .login-wrapper {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-panels {
+      display: flex;
+      max-width: 900px;
+      width: 100%;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--glass-shadow);
+      background: var(--sidebar-glass);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-border);
+    }
+    /* Left panel */
+    .login-brand-panel {
+      flex: 1;
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(8px) saturate(1.5);
+      -webkit-backdrop-filter: blur(8px) saturate(1.5);
+      box-shadow: 0 8px 32px rgba(26,63,82,0.3) inset;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    .login-brand-panel::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
+    .login-brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -70px;
+      left: -40px;
+      width: 220px;
+      height: 220px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .login-brand-panel .brand-logo {
+      font-family: 'Poppins', sans-serif;
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand-panel .brand-logo i {
+      color: var(--gold);
+      margin-right: 8px;
+    }
+    .login-brand-panel p {
+      margin-top: 16px;
+      opacity: 0.85;
+      font-size: 0.95rem;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand-panel .back-link {
+      margin-top: 30px;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+      position: relative;
+      z-index: 1;
+    }
+    .login-brand-panel .back-link:hover {
+      color: white;
+    }
+
+    /* Right panel */
+    .login-form-panel {
+      flex: 1;
+      padding: 60px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--sidebar-glass);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+    }
+    .login-form-panel h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+    .login-form-panel .subtitle {
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      font-size: 0.9rem;
+    }
+    .password-input-wrap {
+      position: relative;
+    }
+    .password-input-wrap .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      font-size: 1rem;
+      transition: color 0.2s;
+      z-index: 2;
+      padding: 4px;
+    }
+    .password-input-wrap .toggle-password:hover {
+      color: var(--navy);
+    }
+    .form-error {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--badge-red);
+      border-radius: 10px;
+      color: #c44;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-toggle-login {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 20;
+    }
+
+    @media (max-width: 768px) {
+      .login-panels {
+        flex-direction: column;
+      }
+      .login-brand-panel {
+        padding: 40px 30px;
+      }
+      .login-form-panel {
+        padding: 40px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background layer (same as admin) -->
+  <div class="bg-layer"></div>
+
+  <!-- Theme toggle in top right -->
+  <div class="theme-toggle theme-toggle-login" onclick="toggleTheme()" title="Toggle theme"></div>
+
+  <!-- Login split panels -->
+  <div class="login-wrapper">
+    <div class="login-panels">
+
+      <!-- LEFT: Branding -->
+      <div class="login-brand-panel">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="J&J Soft Aroma"
+             style="width:100px;height:100px;object-fit:contain;border-radius:20px;background:#fff;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,0.2);margin-bottom:18px;">
+        <div class="brand-logo">
+          J&J Soft Aroma
+        </div>
+        <p>Admin Command Centre</p>
+        <p style="font-size:0.85rem; opacity:0.75;">Manage your baby fragrance empire with elegance and ease.</p>
+        <a href="{{ url_for('customer.home') }}" class="back-link">
+          <i class="bi bi-arrow-left"></i> Back to Shop
+        </a>
+      </div>
+
+      <!-- RIGHT: Form -->
+      <div class="login-form-panel">
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Sign in to your admin dashboard</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="form-error">
+                <i class="bi bi-x-circle"></i> {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-input" placeholder="Enter your username" required autofocus>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="password-input-wrap">
+              <input type="password" name="password" id="passwordField" class="form-input" placeholder="Enter your password" required>
+              <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Toggle password visibility">
+                <i class="bi bi-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100" style="margin-top:8px;">
+            <i class="bi bi-box-arrow-in-right"></i> Sign In
+          </button>
+        </form>
+
+        <p style="text-align:center; margin-top:20px; font-size:0.85rem; color:var(--text-muted);">
+          Need help? <a href="https://wa.me/256760868005" style="color:var(--green);">WhatsApp Support</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='admin/js/admin-script.js') }}"></script>
+  <script>
+    function togglePassword() {
+      const field = document.getElementById('passwordField');
+      const icon = document.getElementById('eyeIcon');
+      if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+      } else {
+        field.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      }
+    }
+  </script>
+</body>
+</html>

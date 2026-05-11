@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="J&J Soft Aroma — Uganda's most trusted baby perfume and skincare brand. Safe, gentle, organic baby products.">
+  <meta name="keywords" content="baby perfume Uganda, baby products Kampala, J&J Soft Aroma, baby skincare">
+  <meta property="og:title"       content="J&J Soft Aroma — Baby Perfumes &amp; Products">
+  <meta property="og:description" content="Uganda's most trusted baby fragrance brand. Safe, gentle, organic baby products.">
+  <meta property="og:type"        content="website">
+  <meta name="twitter:card"       content="summary_large_image">
+  <title>{% block title %}J&amp;J Soft Aroma{% endblock %}</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/favicon.png') }}">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Site CSS -->
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ══════════════ PAGE LOADER ══════════════ -->
+<div id="page-loader">
+  <div class="loader-logo">
+    <div class="loader-icon">J&amp;J</div>
+    <div class="loader-text-wrap">
+      <div class="loader-name">Soft Aroma</div>
+      <div class="loader-sub">baby perfumes</div>
+    </div>
+  </div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- ══════════════ NAVBAR (desktop) ══════════════ -->
+<nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+  <div class="container">
+
+    <!-- BRAND -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('customer.home') }}">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" class="site-logo-img" alt="J&J Soft Aroma">
+    </a>
+
+    <!-- DESKTOP NAV LINKS -->
+    <ul class="navbar-nav mx-auto gap-1 d-none d-lg-flex">
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'customer.home' %}active{% endif %}"
+           href="{{ url_for('customer.home') }}">
+          <i class="bi bi-house me-1" style="font-size:0.78rem;"></i>Home
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'customer.products' %}active{% endif %}"
+           href="{{ url_for('customer.products') }}">Products</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'customer.about' %}active{% endif %}"
+           href="{{ url_for('customer.about') }}">About</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'customer.faq' %}active{% endif %}"
+           href="{{ url_for('customer.faq') }}">FAQ</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'customer.contact' %}active{% endif %}"
+           href="{{ url_for('customer.contact') }}">Contact</a>
+      </li>
+    </ul>
+
+    <!-- DESKTOP RIGHT: SEARCH + CART + WHATSAPP -->
+    <div class="d-none d-lg-flex align-items-center gap-3">
+      <!-- Search -->
+      <form class="nav-search-wrap" action="{{ url_for('customer.products') }}" method="GET">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" name="search" class="form-control"
+               placeholder="Search products…"
+               value="{{ request.args.get('search','') }}"
+               autocomplete="off">
+      </form>
+
+      <!-- Wishlist icon -->
+      <button class="action-btn" title="Wishlist" style="background:none;border:none;color:var(--text-mid);font-size:1.1rem;cursor:pointer;">
+        <i class="bi bi-heart"></i>
+      </button>
+
+      <!-- Cart -->
+      {% set cart = session.get('cart', {}) %}
+      {% set count = cart.values() | sum(attribute='quantity') %}
+      <a href="{{ url_for('customer.cart') }}" class="nav-cart-btn">
+        <i class="bi bi-bag"></i>
+        <span class="cart-text">Cart</span>
+        {% if count > 0 %}
+          <span class="cart-badge cart-count-badge">{{ count }}</span>
+        {% else %}
+          <span class="cart-badge cart-count-badge" style="display:none;">0</span>
+        {% endif %}
+      </a>
+
+      <!-- WhatsApp -->
+      <a href="https://wa.me/256760868005" target="_blank"
+         class="btn-green-custom" style="padding:8px 16px;border-radius:50px;font-size:0.82rem;">
+        <i class="bi bi-whatsapp"></i>
+        <span class="d-none d-xl-inline">WhatsApp</span>
+      </a>
+    </div>
+
+    <!-- MOBILE: just show cart icon in top bar -->
+    <div class="d-flex d-lg-none align-items-center gap-2 ms-auto">
+      {% set cart = session.get('cart', {}) %}
+      {% set count = cart.values() | sum(attribute='quantity') %}
+      <a href="{{ url_for('customer.cart') }}"
+         class="position-relative"
+         style="color:var(--navy);font-size:1.3rem;text-decoration:none;">
+        <i class="bi bi-bag"></i>
+        {% if count > 0 %}
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                style="background:var(--gold);font-size:0.55rem;min-width:16px;">
+            {{ count }}
+          </span>
+        {% endif %}
+      </a>
+    </div>
+
+  </div>
+</nav>
+
+
+<!-- ══════════════ FLASH TOASTS ══════════════ -->
+{% with flash_toasts = get_flashed_messages(with_categories=true) %}
+  {% if flash_toasts %}
+    <script>
+      window.customerFlashToasts = {{ flash_toasts | tojson }};
+    </script>
+  {% endif %}
+{% endwith %}
+
+
+<!-- ══════════════ PAGE CONTENT ══════════════ -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="footer" id="mainFooter">
+  <div class="container">
+    <div class="row g-4 pb-5">
+
+      <!-- Brand col -->
+      <div class="col-lg-3 col-md-6">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" class="footer-logo-img" alt="J&J Soft Aroma">
+        </div>
+        <p class="footer-brand-desc">
+          Uganda's most trusted baby fragrance brand — crafting safe, gentle, and beautifully
+          scented products for your precious little ones since 2018.
+        </p>
+        <div class="footer-socials">
+          <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="social-icon"><i class="bi bi-tiktok"></i></a>
+          <a href="https://wa.me/256760868005" target="_blank" class="social-icon"><i class="bi bi-whatsapp"></i></a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="col-lg-2 col-md-3 col-6">
+        <h5 class="footer-title">Quick Links</h5>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('customer.home') }}"><i class="bi bi-chevron-right"></i> Home</a></li>
+          <li><a href="{{ url_for('customer.products') }}"><i class="bi bi-chevron-right"></i> Products</a></li>
+          <li><a href="{{ url_for('customer.about') }}"><i class="bi bi-chevron-right"></i> About Us</a></li>
+          <li><a href="{{ url_for('customer.faq') }}"><i class="bi bi-chevron-right"></i> FAQ</a></li>
+          <li><a href="{{ url_for('customer.contact') }}"><i class="bi bi-chevron-right"></i> Contact</a></li>
+          <li><a href="{{ url_for('customer.cart') }}"><i class="bi bi-chevron-right"></i> My Cart</a></li>
+        </ul>
+      </div>
+
+      <!-- Categories -->
+      <div class="col-lg-2 col-md-3 col-6">
+        <h5 class="footer-title">Categories</h5>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('customer.products') }}"><i class="bi bi-chevron-right"></i> Baby Perfumes</a></li>
+          <li><a href="{{ url_for('customer.products') }}"><i class="bi bi-chevron-right"></i> Skincare</a></li>
+          <li><a href="{{ url_for('customer.products') }}"><i class="bi bi-chevron-right"></i> Bath &amp; Body</a></li>
+          <li><a href="{{ url_for('customer.products') }}"><i class="bi bi-chevron-right"></i> Gift Sets</a></li>
+          <li><a href="{{ url_for('customer.products') }}"><i class="bi bi-chevron-right"></i> Newborn Range</a></li>
+          <li><a href="{{ url_for('customer.products') }}"><i class="bi bi-chevron-right"></i> Hair Care</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="col-lg-2 col-md-6 col-6">
+        <h5 class="footer-title">Support</h5>
+        <ul class="footer-links">
+          <li><a href="#"><i class="bi bi-chevron-right"></i> Track Order</a></li>
+          <li><a href="{{ url_for('customer.faq') }}"><i class="bi bi-chevron-right"></i> Returns Policy</a></li>
+          <li><a href="{{ url_for('customer.faq') }}"><i class="bi bi-chevron-right"></i> Shipping Info</a></li>
+          <li><a href="{{ url_for('customer.faq') }}"><i class="bi bi-chevron-right"></i> Privacy Policy</a></li>
+          <li><a href="{{ url_for('customer.faq') }}"><i class="bi bi-chevron-right"></i> FAQ</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact info -->
+      <div class="col-lg-3 col-md-6">
+        <h5 class="footer-title">Get in Touch</h5>
+        <div class="footer-contact-item">
+          <i class="bi bi-geo-alt-fill"></i>
+          <span>Plot 45, Nakasero Road,<br>Kampala, Uganda</span>
+        </div>
+        <div class="footer-contact-item">
+          <i class="bi bi-whatsapp"></i>
+          <span>
+            <a href="https://wa.me/256760868005" style="color:rgba(255,255,255,0.6);text-decoration:none;">
+              +256 760 868 005
+            </a>
+          </span>
+        </div>
+        <div class="footer-contact-item">
+          <i class="bi bi-envelope-fill"></i>
+          <span>
+            <a href="mailto:jjsoftaroma@gmail.com" style="color:rgba(255,255,255,0.6);text-decoration:none;">
+              jjsoftaroma@gmail.com
+            </a>
+          </span>
+        </div>
+        <div class="footer-contact-item">
+          <i class="bi bi-clock-fill"></i>
+          <span>Mon–Sat: 8AM–8PM<br>Sunday: 10AM–6PM</span>
+        </div>
+        <div style="margin-top:14px;">
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.38);margin-bottom:9px;">We Accept:</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,0.07);border-radius:6px;padding:3px 9px;font-size:0.68rem;color:rgba(255,255,255,0.55);">MTN MoMo</span>
+            <span style="background:rgba(255,255,255,0.07);border-radius:6px;padding:3px 9px;font-size:0.68rem;color:rgba(255,255,255,0.55);">Airtel Money</span>
+            <span style="background:rgba(255,255,255,0.07);border-radius:6px;padding:3px 9px;font-size:0.68rem;color:rgba(255,255,255,0.55);">Cash</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row -->
+  </div>
+
+  <!-- Footer bottom bar -->
+  <div class="footer-bottom">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <p class="footer-bottom-text mb-0">
+          &copy; <script>document.write(new Date().getFullYear())</script>
+          <strong style="color:rgba(255,255,255,0.65);">J&amp;J Soft Aroma</strong>.
+          All rights reserved.
+        </p>
+        <a href="mailto:dev@grandgrandetechnologies.com" class="dev-credit">
+          <i class="bi bi-code-slash"></i>
+          Designed &amp; Developed by <strong>GGT — Grand Grande Technologies</strong>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════ MOBILE BOTTOM NAV ══════════════ -->
+<nav class="bottom-nav d-lg-none">
+  <div class="bottom-nav-inner container">
+
+    <!-- Home -->
+    <a href="{{ url_for('customer.home') }}"
+       class="bn-item {% if request.endpoint == 'customer.home' %}active{% endif %}"
+       data-page="/">
+      <i class="bi bi-house{% if request.endpoint == 'customer.home' %}-fill{% endif %}"></i>
+      <span>Home</span>
+    </a>
+
+    <!-- Products -->
+    <a href="{{ url_for('customer.products') }}"
+       class="bn-item {% if request.endpoint == 'customer.products' or request.endpoint == 'customer.product_detail' %}active{% endif %}"
+       data-page="/products">
+      <i class="bi bi-grid{% if request.endpoint == 'customer.products' or request.endpoint == 'customer.product_detail' %}-fill{% endif %}"></i>
+      <span>Shop</span>
+    </a>
+
+    <!-- WhatsApp (centre raised) -->
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <a href="https://wa.me/256760868005?text=Hello%20J%26J%20Soft%20Aroma!%20I'm%20interested%20in%20your%20baby%20products."
+         target="_blank" class="bn-wa">
+        <i class="bi bi-whatsapp"></i>
+      </a>
+      <span class="bn-wa-label">Order</span>
+    </div>
+
+    <!-- Cart -->
+    {% set cart = session.get('cart', {}) %}
+    {% set count = cart.values() | sum(attribute='quantity') %}
+    <a href="{{ url_for('customer.cart') }}"
+       class="bn-item {% if request.endpoint == 'customer.cart' or request.endpoint == 'customer.checkout' %}active{% endif %}"
+       data-page="/cart"
+       style="position:relative;">
+      <i class="bi bi-bag{% if request.endpoint == 'customer.cart' or request.endpoint == 'customer.checkout' %}-fill{% endif %}"></i>
+      {% if count > 0 %}
+        <span class="bn-cart-badge">{{ count }}</span>
+      {% endif %}
+      <span>Cart</span>
+    </a>
+
+    <!-- More (About/FAQ/Contact dropdown via simple link to about) -->
+    <a href="{{ url_for('customer.about') }}"
+       class="bn-item {% if request.endpoint in ['customer.about','customer.faq','customer.contact'] %}active{% endif %}"
+       data-page="/about">
+      <i class="bi bi-person{% if request.endpoint in ['customer.about','customer.faq','customer.contact'] %}-fill{% endif %}"></i>
+      <span>More</span>
+    </a>
+
+  </div>
+</nav>
+
+
+<!-- ══════════════ FLOATING WHATSAPP (desktop) ══════════════ -->
+<div class="whatsapp-float d-none d-lg-block">
+  <div style="position:relative;display:inline-block;">
+    <a href="https://wa.me/256760868005?text=Hello%20J%26J%20Soft%20Aroma!%20I%20am%20interested%20in%20your%20baby%20products."
+       target="_blank" class="wa-btn">
+      <i class="bi bi-whatsapp"></i>
+      <span class="wa-label">WhatsApp Us</span>
+    </a>
+    <div class="wa-pulse"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div class="toast-container">
+  <div class="toast-msg" id="siteToast">
+    <i class="bi bi-check-circle-fill"></i>
+    <span id="siteToastText"></span>
+  </div>
+</div>
+
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const flashToasts = window.customerFlashToasts || [];
+    const typeMap = {
+      success: 'success',
+      danger: 'error',
+      error: 'error',
+      warning: 'warning',
+      info: 'info'
+    };
+
+    flashToasts.forEach(([category, message]) => {
+      showToast(message, typeMap[category] || 'info');
+    });
+  });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
