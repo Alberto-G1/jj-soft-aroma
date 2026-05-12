@@ -63,7 +63,7 @@
   <article class="premium-product-card">
     <div class="premium-media-wrap">
       {% if product.image_url %}
-        <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+        <img src="{{ product.image_url if product.image_url else url_for('static', filename='images/default-product.jpg') }}" alt="{{ product.name }}">
       {% else %}
         <div class="premium-placeholder"><i class="bi bi-image"></i></div>
       {% endif %}

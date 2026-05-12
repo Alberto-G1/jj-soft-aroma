@@ -36,7 +36,7 @@
                    style="transition:opacity 0.25s ease;">
             {% elif product.image_url %}
               <img id="mainProductImg"
-                   src="{{ url_for('static', filename=product.image_url) }}"
+                   src="{{ product.image_url if product.image_url else url_for('static', filename='images/default-product.jpg') }}"
                    alt="{{ product.name }}"
                    style="transition:opacity 0.25s ease;">
             {% else %}
@@ -61,7 +61,7 @@
               {% endfor %}
             {% elif product.image_url %}
               <div class="thumb active" style="border-radius:8px; overflow:hidden; border:2px solid var(--gold);">
-                <img src="{{ url_for('static', filename=product.image_url) }}" alt="Main" style="width:100%; height:80px; object-fit:cover;">
+                <img src="{{ product.image_url if product.image_url else url_for('static', filename='images/default-product.jpg') }}" alt="Main" style="width:100%; height:80px; object-fit:cover;">
               </div>
             {% endif %}
           </div>

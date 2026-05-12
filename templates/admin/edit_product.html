@@ -35,7 +35,7 @@
         <div class="sf-full">
           <label class="slbl"><i class="bi bi-image" style="color:var(--green);"></i> Main Product Image</label>
           {% if product.image_url %}
-          <div style="margin-bottom:12px;"><img src="{{ url_for('static', filename=product.image_url) }}" style="height:120px;border-radius:14px;border:2px solid rgba(168,216,234,.3);"></div>
+          <div style="margin-bottom:12px;"><img src="{{ product.image_url if product.image_url else url_for('static', filename='images/default-product.jpg') }}" style="height:120px;border-radius:14px;border:2px solid rgba(168,216,234,.3);"></div>
           {% endif %}
           <label class="file-drop-zone">
             <input type="file" name="image" accept="image/*" onchange="previewImage(this,'preview')">
