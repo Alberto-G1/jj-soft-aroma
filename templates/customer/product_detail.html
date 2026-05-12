@@ -31,12 +31,12 @@
           <div class="main-product-img">
             {% if product.images %}
               <img id="mainProductImg"
-                   src="{{ url_for('static', filename=product.images[0].image_url) }}"
+                   src="{{ product.images[0].image_url if product.images[0].image_url and product.images[0].image_url.startswith('http') else url_for('static', filename=product.images[0].image_url) }}"
                    alt="{{ product.name }}"
                    style="transition:opacity 0.25s ease;">
             {% elif product.image_url %}
               <img id="mainProductImg"
-                   src="{{ product.image_url if product.image_url else url_for('static', filename='images/default-product.jpg') }}"
+                   src="{{ product.image_url if product.image_url and product.image_url.startswith('http') else url_for('static', filename=product.image_url) }}"
                    alt="{{ product.name }}"
                    style="transition:opacity 0.25s ease;">
             {% else %}
@@ -55,13 +55,13 @@
           <div class="thumb-row mt-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(80px, 1fr)); gap:10px;">
             {% if product.images %}
               {% for img in product.images %}
-                <div class="thumb {% if loop.first %}active{% endif %}" onclick="changeMainImage('{{ url_for('static', filename=img.image_url) }}', this)" style="cursor:pointer; border-radius:8px; overflow:hidden; border:2px solid var(--divider); transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--divider)'">
-                  <img src="{{ url_for('static', filename=img.image_url) }}" alt="Product variant" style="width:100%; height:80px; object-fit:cover;">
+                <div class="thumb {% if loop.first %}active{% endif %}" onclick="changeMainImage('{{ img.image_url if img.image_url and img.image_url.startswith('http') else url_for('static', filename=img.image_url) }}', this)" style="cursor:pointer; border-radius:8px; overflow:hidden; border:2px solid var(--divider); transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--divider)'">
+                  <img src="{{ img.image_url if img.image_url and img.image_url.startswith('http') else url_for('static', filename=img.image_url) }}" alt="Product variant" style="width:100%; height:80px; object-fit:cover;">
                 </div>
               {% endfor %}
             {% elif product.image_url %}
               <div class="thumb active" style="border-radius:8px; overflow:hidden; border:2px solid var(--gold);">
-                <img src="{{ product.image_url if product.image_url else url_for('static', filename='images/default-product.jpg') }}" alt="Main" style="width:100%; height:80px; object-fit:cover;">
+                <img src="{{ product.image_url if product.image_url and product.image_url.startswith('http') else url_for('static', filename=product.image_url) }}" alt="Main" style="width:100%; height:80px; object-fit:cover;">
               </div>
             {% endif %}
           </div>

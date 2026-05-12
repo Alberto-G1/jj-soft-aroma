@@ -48,7 +48,7 @@
   <article class="premium-category-card">
     <div class="category-orb-wrap">
       {% if cat.icon_url %}
-        <img src="{{ url_for('static', filename=cat.icon_url) }}" alt="{{ cat.name }}">
+        <img src="{{ cat.icon_url if cat.icon_url and cat.icon_url.startswith('http') else url_for('static', filename=cat.icon_url) }}" alt="{{ cat.name }}">
       {% else %}
         <div class="category-orb-placeholder"><i class="bi bi-tags"></i></div>
       {% endif %}
@@ -238,7 +238,7 @@ function openViewCategoryModal(category) {
   } else {
     productsBox.innerHTML = '<em>No products have been assigned to this category yet.</em>';
   }
-  document.getElementById('viewCategoryIcon').src = category.icon_url ? staticBase + category.icon_url : fallbackCategorySvg();
+  document.getElementById('viewCategoryIcon').src = category.icon_url ? (category.icon_url.startsWith('http') ? category.icon_url : staticBase + category.icon_url) : fallbackCategorySvg();
   openModal('viewCategoryModal');
 }
 

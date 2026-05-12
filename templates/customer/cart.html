@@ -42,7 +42,7 @@
                     <div class="d-flex align-items-center gap-3">
                       <div class="cart-product-img">
                         {% if item.image %}
-                          <img src="{{ url_for('static', filename=item.image) }}"
+                          <img src="{{ item.image if item.image and item.image.startswith('http') else url_for('static', filename=item.image) }}"
                                alt="{{ item.name }}">
                         {% else %}
                           <i class="bi bi-stars" style="font-size:1.4rem;color:var(--sky);"></i>

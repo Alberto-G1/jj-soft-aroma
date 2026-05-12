@@ -28,7 +28,7 @@
             <td>
               <div style="display:flex; align-items:center; gap:10px;">
                 {% if item.product and item.product.image_url %}
-                  <img src="{{ url_for('static', filename=item.product.image_url) }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                  <img src="{{ item.product.image_url if item.product.image_url and item.product.image_url.startswith('http') else url_for('static', filename=item.product.image_url) }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
                 {% else %}
                   <div style="width:40px;height:40px;background:var(--sky-pale);border-radius:8px;display:flex;align-items:center;justify-content:center;">
                     <i class="bi bi-image"></i>

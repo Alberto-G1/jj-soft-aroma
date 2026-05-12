@@ -136,7 +136,7 @@
             <div class="summary-row" style="padding:8px 0;border-bottom:1px solid var(--sky-pale);">
               <div class="d-flex align-items-center gap-2">
                 {% if item.image %}
-                  <img src="{{ url_for('static', filename=item.image) }}"
+                  <img src="{{ item.image if item.image and item.image.startswith('http') else url_for('static', filename=item.image) }}"
                        style="width:36px;height:36px;object-fit:cover;border-radius:8px;">
                 {% else %}
                   <div style="width:36px;height:36px;background:var(--sky-pale);border-radius:8px;display:flex;align-items:center;justify-content:center;">

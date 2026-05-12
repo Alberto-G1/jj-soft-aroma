@@ -63,7 +63,7 @@
   <article class="premium-product-card">
     <div class="premium-media-wrap">
       {% if product.image_url %}
-        <img src="{{ product.image_url if product.image_url else url_for('static', filename='images/default-product.jpg') }}" alt="{{ product.name }}">
+        <img src="{{ product.image_url if product.image_url and product.image_url.startswith('http') else url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
       {% else %}
         <div class="premium-placeholder"><i class="bi bi-image"></i></div>
       {% endif %}
@@ -204,7 +204,7 @@ function openViewProductModal(product) {
   const badge = document.getElementById('viewProductFeatured');
   badge.style.display = product.featured ? 'inline-flex' : 'none';
   const image = document.getElementById('viewProductImage');
-  image.src = product.image_url ? staticBase + product.image_url : fallbackImageSvg();
+  image.src = product.image_url ? (product.image_url.startsWith('http') ? product.image_url : staticBase + product.image_url) : fallbackImageSvg();
   openModal('viewProductModal');
 }
 </script>

@@ -177,7 +177,7 @@
         <a href="{{ url_for('customer.products', category=cat.slug) }}" class="category-circle-card">
           <div class="category-circle-img">
             {% if cat.icon_url %}
-              <img src="{{ url_for('static', filename=cat.icon_url) }}" alt="{{ cat.name }}">
+              <img src="{{ cat.icon_url if cat.icon_url and cat.icon_url.startswith('http') else url_for('static', filename=cat.icon_url) }}" alt="{{ cat.name }}">
             {% else %}
               <i class="bi bi-grid-3x3-gap"></i>
             {% endif %}
@@ -248,7 +248,10 @@
       <div class="home-offer-card" style="background:{{ bg_map.get(offer.bg_color, bg_map.blue) }};">
         <div class="offer-bubble bubble-one"></div>
         <div class="offer-bubble bubble-two"></div>
-        <div style="position:relative;z-index:2;">
+        {% if offer.image_url %}
+          <img src="{{ offer.image_url if offer.image_url and offer.image_url.startswith('http') else url_for('static', filename=offer.image_url) }}" alt="{{ offer.title }}" style="position:absolute;right:24px;bottom:18px;width:150px;max-width:36%;height:150px;object-fit:cover;border-radius:28px;opacity:.92;z-index:1;box-shadow:0 18px 45px rgba(0,0,0,.18);">
+        {% endif %}
+        <div style="position:relative;z-index:2;max-width:{% if offer.image_url %}62%{% else %}100%{% endif %};">
           <span class="home-offer-badge">{{ offer.badge_text or 'SPECIAL OFFER' }}</span>
           <h2>{{ offer.title }}</h2>
           {% if offer.subtitle %}<h3>{{ offer.subtitle }}</h3>{% endif %}
