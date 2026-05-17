@@ -37,6 +37,33 @@
   });
 })();
 
+/* ── MOBILE MORE BUTTON DROPDOWN ───────────────────────────── */
+(function () {
+  const moreBtn = document.getElementById('mobileMoreBtn');
+  const dropdown = document.getElementById('mobileMoreDropdown');
+  if (!moreBtn || !dropdown) return;
+
+  // Toggle dropdown on button click
+  moreBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+
+  // Close dropdown when clicking on items
+  dropdown.querySelectorAll('.bn-dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      dropdown.classList.remove('open');
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!moreBtn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('open');
+    }
+  });
+})();
+
 /* ── FADE-IN ON SCROLL ───────────────────────────────────────── */
 (function () {
   const checkFade = () => {
