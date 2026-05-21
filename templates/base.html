@@ -114,7 +114,7 @@
       </a>
     </div>
 
-    <!-- MOBILE: just show cart icon in top bar -->
+    <!-- MOBILE: just show cart icon + more button in top bar -->
     <div class="d-flex d-lg-none align-items-center gap-2 ms-auto">
       {% set cart = session.get('cart', {}) %}
       {% set count = cart.values() | sum(attribute='quantity') %}
@@ -129,10 +129,37 @@
           </span>
         {% endif %}
       </a>
+      
+      <!-- More button for mobile navigation -->
+      <button id="mobileMoreBtn" class="position-relative" style="background:none;border:none;color:var(--navy);font-size:1.3rem;cursor:pointer;padding:0;">
+        <i class="bi bi-list"></i>
+      </button>
     </div>
 
   </div>
 </nav>
+
+<!-- Mobile More Dropdown Menu -->
+<div id="mobileMoreDropdown" class="mobile-more-dropdown d-lg-none">
+  <a href="{{ url_for('customer.home') }}" class="bn-dropdown-item {% if request.endpoint == 'customer.home' %}active{% endif %}">
+    <i class="bi bi-house"></i> Home
+  </a>
+  <a href="{{ url_for('customer.products') }}" class="bn-dropdown-item {% if request.endpoint == 'customer.products' %}active{% endif %}">
+    <i class="bi bi-box-seam"></i> Products
+  </a>
+  <a href="{{ url_for('customer.about') }}" class="bn-dropdown-item {% if request.endpoint == 'customer.about' %}active{% endif %}">
+    <i class="bi bi-info-circle"></i> About
+  </a>
+  <a href="{{ url_for('customer.faq') }}" class="bn-dropdown-item {% if request.endpoint == 'customer.faq' %}active{% endif %}">
+    <i class="bi bi-question-circle"></i> FAQ
+  </a>
+  <a href="{{ url_for('customer.contact') }}" class="bn-dropdown-item {% if request.endpoint == 'customer.contact' %}active{% endif %}">
+    <i class="bi bi-telephone"></i> Contact
+  </a>
+  <a href="https://wa.me/256760868005" target="_blank" class="bn-dropdown-item">
+    <i class="bi bi-whatsapp"></i> WhatsApp
+  </a>
+</div>
 
 
 <!-- ══════════════ FLASH TOASTS ══════════════ -->
