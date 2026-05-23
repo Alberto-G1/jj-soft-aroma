@@ -302,29 +302,8 @@ function changeThumb(el, src) {
   }
 }
 
-/* ── IMAGE ERROR HANDLING ───────────────────────────────────── */
-(function () {
-  document.addEventListener('DOMContentLoaded', () => {
-    // Handle all images with error fallback
-    const allImages = document.querySelectorAll('img');
-    allImages.forEach(img => {
-      // Add error handler if not already present
-      if (!img.hasAttribute('data-error-handled')) {
-        img.addEventListener('error', function() {
-          this.style.display = 'none';
-          // Show next sibling placeholder if it exists
-          if (this.nextElementSibling && this.nextElementSibling.classList.contains('no-image-placeholder')) {
-            this.nextElementSibling.style.display = 'flex';
-          }
-        });
-        img.setAttribute('data-error-handled', 'true');
-      }
-    });
-  });
-})();
-
 /* ── ACCORDION (FAQ) ─────────────────────────────────────────── */
-// Accordion handles smooth transitions
+// Bootstrap handles this, but ensure smooth custom styling
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.accordion-button').forEach(btn => {
     btn.addEventListener('click', () => {

@@ -54,9 +54,7 @@
                    style="justify-content:flex-start;">
                   {% if cat.icon_url %}
                     <img src="{{ cat.icon_url if cat.icon_url and cat.icon_url.startswith('http') else url_for('static', filename=cat.icon_url) }}"
-                         style="width:14px;height:14px;object-fit:cover;border-radius:3px;onerror=this.style.display='none';"
-                         onload=""
-                         onerror="this.style.display='none';">
+                         style="width:14px;height:14px;object-fit:cover;border-radius:3px;">
                   {% endif %}
                   {{ cat.name }}
                 </a>
