@@ -43,9 +43,9 @@ def create_notification(db, Notification, title, message, icon='bell', color='pr
 def send_contact_email(recipient_email, sender_name, sender_contact, subject, message):
     smtp_host = os.getenv('SMTP_HOST', 'smtp.gmail.com')
     smtp_port = int(os.getenv('SMTP_PORT', '587'))
-    smtp_username = os.getenv('SMTP_USERNAME', 'nuwarindaalbertgrande@gmail.com')
-    smtp_password = os.getenv('SMTP_PASSWORD', '')
-    smtp_from = os.getenv('SMTP_FROM_EMAIL', smtp_username)
+    smtp_username = os.getenv('SMTP_USERNAME') or os.getenv('MAIL_USERNAME', '')
+    smtp_password = os.getenv('SMTP_PASSWORD') or os.getenv('MAIL_PASSWORD', '')
+    smtp_from = os.getenv('SMTP_FROM_EMAIL') or smtp_username
     use_tls = os.getenv('SMTP_USE_TLS', '1').lower() not in {'0', 'false', 'no'}
 
     email_message = EmailMessage()
@@ -63,13 +63,19 @@ def send_contact_email(recipient_email, sender_name, sender_contact, subject, me
         f"Message:\n{message}\n"
     )
 
-    with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-        server.ehlo()
-        if use_tls:
-            server.starttls()
+    if smtp_port == 465 and use_tls:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20) as server:
+            if smtp_username and smtp_password:
+                server.login(smtp_username, smtp_password)
+            server.send_message(email_message)
+    else:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
             server.ehlo()
-        if smtp_password:
-            server.login(smtp_username, smtp_password)
-        server.send_message(email_message)
+            if use_tls:
+                server.starttls()
+                server.ehlo()
+            if smtp_username and smtp_password:
+                server.login(smtp_username, smtp_password)
+            server.send_message(email_message)
 
     return True
