@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 from datetime import datetime, timezone
 from models import db, Product, Category, Order, OrderItem, Offer
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 customer_bp = Blueprint('customer', __name__)
@@ -254,98 +255,6 @@ def faq():
 # ─── CONTACT ─────────────────────────────────────────────
 @customer_bp.route('/contact', methods=['GET', 'POST'])
 def contact():
-    if request.method == 'POST':
-        name    = request.form.get('name')
-        email   = request.form.get('email')
-        subject = request.form.get('subject', 'General Enquiry')
-        message = request.form.get('message')
-
-        # always send to whatsapp as backup
-        wa_text = (
-            f"Hello J&J Soft Aroma!%0A"
-            f"My name is {name}.%0A"
-            f"Email: {email}%0A"
-            f"Subject: {subject}%0A%0A"
-            f"Message:%0A{message}"
-        )
-        whatsapp_url = f"https://wa.me/256763085855?text={wa_text}"
-
-        # try sending email
-        try:
-            import smtplib
-            import os
-            from email.mime.text import MIMEText
-            from email.mime.multipart import MIMEMultipart
-
-            mail_user = os.getenv('MAIL_USERNAME')
-            mail_pass = os.getenv('MAIL_PASSWORD')
-
-            if mail_user and mail_pass:
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = f"[J&J Soft Aroma] {subject} — from {name}"
-                msg['From']    = mail_user
-                msg['To']      = mail_user
-                msg['Reply-To']= email
-
-                html_body = f"""
-                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-                  <div style="background:#1a3c5e;padding:20px;border-radius:8px 8px 0 0;">
-                    <h2 style="color:#fff;margin:0;">New Contact Message</h2>
-                    <p style="color:#90caf9;margin:4px 0 0;">J&J Soft Aroma Website</p>
-                  </div>
-                  <div style="background:#f9f9f9;padding:24px;border:1px solid #eee;">
-                    <table style="width:100%;border-collapse:collapse;">
-                      <tr>
-                        <td style="padding:8px 0;color:#666;width:120px;">Name</td>
-                        <td style="padding:8px 0;font-weight:bold;">{name}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:8px 0;color:#666;">Email</td>
-                        <td style="padding:8px 0;">
-                          <a href="mailto:{email}">{email}</a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding:8px 0;color:#666;">Subject</td>
-                        <td style="padding:8px 0;">{subject}</td>
-                      </tr>
-                    </table>
-                    <hr style="border:1px solid #eee;margin:16px 0;">
-                    <p style="color:#666;margin-bottom:8px;">Message:</p>
-                    <div style="background:#fff;padding:16px;border-radius:6px;
-                                border-left:4px solid #4caf88;line-height:1.7;">
-                      {message.replace(chr(10), '<br>')}
-                    </div>
-                  </div>
-                  <div style="background:#eee;padding:12px;text-align:center;
-                              border-radius:0 0 8px 8px;font-size:0.8rem;color:#999;">
-                    J&J Soft Aroma — Built by GGT Grand Grande Technologies
-                  </div>
-                </div>
-                """
-
-                msg.attach(MIMEText(html_body, 'html'))
-
-                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                    server.login(mail_user, mail_pass)
-                    server.sendmail(mail_user, mail_user, msg.as_string())
-
-                flash('Message sent! We will get back to you soon.', 'success')
-            else:
-                flash('Message received! Redirecting to WhatsApp to confirm.', 'info')
-                return redirect(whatsapp_url)
-
-        except Exception as e:
-            import logging
-            logging.getLogger('routes.customer_routes').error(
-                f"Contact email error: {e}"
-            )
-            flash('Message received! Redirecting you to WhatsApp.', 'info')
-            return redirect(whatsapp_url)
-
-        return redirect(url_for('customer.contact'))
-
-
     from models import StoreSetting, ContactMessage
     from utils import send_contact_email
 
@@ -356,7 +265,7 @@ def contact():
         db.session.commit()
 
     if request.method == 'POST':
-        name    = request.form.get('name', '').strip()
+        name = request.form.get('name', '').strip()
         contact = request.form.get('contact', '').strip()
         subject = request.form.get('subject', 'General Enquiry').strip()
         message = request.form.get('message', '').strip()
@@ -365,17 +274,36 @@ def contact():
             flash('Please fill in your name, contact, and message.', 'danger')
             return render_template('customer/contact.html', store=store)
 
-        recipient_email = (store.email or 'nuwarindaalbertgrande@gmail.com').strip()
+        wa_text = (
+            f"Hello J&J Soft Aroma!%0A"
+            f"My name is {name}.%0A"
+            f"Contact: {contact}%0A"
+            f"Subject: {subject}%0A%0A"
+            f"Message:%0A{message}"
+        )
+        whatsapp_url = f"https://wa.me/256763085855?text={wa_text}"
+
+        recipient_email = (store.email or '').strip()
+        if not recipient_email:
+            recipient_email = os.getenv('SMTP_FROM_EMAIL', '').strip()
+
         contact_log = ContactMessage(
             name=name,
             contact=contact,
             subject=subject,
             message=message,
-            recipient_email=recipient_email,
+            recipient_email=recipient_email or 'not-set',
             delivery_status='pending'
         )
         db.session.add(contact_log)
         db.session.commit()
+
+        if not recipient_email:
+            contact_log.delivery_status = 'failed'
+            contact_log.error_message = 'Recipient email not configured'
+            db.session.commit()
+            flash('Message saved. Redirecting you to WhatsApp to confirm.', 'info')
+            return redirect(whatsapp_url)
 
         try:
             send_contact_email(recipient_email, name, contact, subject, message)
@@ -383,14 +311,14 @@ def contact():
             contact_log.sent_at = datetime.now(timezone.utc)
             db.session.commit()
             flash('Your message has been emailed successfully. We will reply soon.', 'success')
+            return redirect(url_for('customer.contact'))
         except Exception as e:
             contact_log.delivery_status = 'failed'
             contact_log.error_message = str(e)[:300]
             db.session.commit()
             logger.error(f"Contact email error: {e}")
-            flash('We saved your message, but the email delivery failed. Please try WhatsApp as well.', 'warning')
-
-        return redirect(url_for('customer.contact'))
+            flash('We saved your message, but the email delivery failed. Redirecting to WhatsApp.', 'warning')
+            return redirect(whatsapp_url)
 
     return render_template('customer/contact.html', store=store)
 
