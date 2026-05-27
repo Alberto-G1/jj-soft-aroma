@@ -520,6 +520,18 @@ main {
 }
 
 /* ── PAGE HERO BANNER ───────────────────────────────────────── */
+.hero-slider,
+.page-hero {
+  margin-top: 14px;
+}
+
+@media (max-width: 576px) {
+  .hero-slider,
+  .page-hero {
+    margin-top: 10px;
+  }
+}
+
 .page-hero {
   background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%);
   padding: 100px 0 50px;
