@@ -237,6 +237,8 @@ def add_product():
         try:
             name        = request.form.get('name')
             price       = request.form.get('price')
+            sale_price_raw = request.form.get('sale_price', '').strip()
+            sale_price  = float(sale_price_raw) if sale_price_raw else None
             description = request.form.get('description')
             stock       = request.form.get('stock')
             category_id = request.form.get('category_id')
@@ -246,7 +248,8 @@ def add_product():
             if file and allowed_file(file.filename):
                 image_url = save_file(file, folder='products')
             product = Product(
-                name=name, price=float(price), description=description,
+                name=name, price=float(price), sale_price=sale_price,
+                description=description,
                 stock=int(stock), category_id=int(category_id) if category_id else None,
                 is_featured=is_featured, image_url=image_url
             )
@@ -255,16 +258,16 @@ def add_product():
             
             # Handle multiple product images
             images = request.files.getlist('product_images')
-            for idx, img_file in enumerate(images):
-                if img_file and allowed_file(img_file.filename):
-                    img_url = save_file(img_file, folder='products')
-                    product_image = ProductImage(
-                        product_id=product.id,
-                        image_url=img_url,
-                        is_main=(idx == 0),
-                        display_order=idx
-                    )
-                    db.session.add(product_image)
+            valid_images = [img for img in images if img and allowed_file(img.filename)]
+            for idx, img_file in enumerate(valid_images):
+                img_url = save_file(img_file, folder='products')
+                product_image = ProductImage(
+                    product_id=product.id,
+                    image_url=img_url,
+                    is_main=(idx == 0),
+                    display_order=idx
+                )
+                db.session.add(product_image)
             
             db.session.commit()
             flash('Product added successfully!', 'success')
@@ -284,6 +287,8 @@ def edit_product(id):
         try:
             product.name        = request.form.get('name')
             product.price       = float(request.form.get('price'))
+            sale_price_raw = request.form.get('sale_price', '').strip()
+            product.sale_price  = float(sale_price_raw) if sale_price_raw else None
             product.description = request.form.get('description')
             product.stock       = int(request.form.get('stock'))
             product.is_featured = True if request.form.get('is_featured') else False
@@ -295,19 +300,19 @@ def edit_product(id):
             
             # Handle multiple product images
             images = request.files.getlist('product_images')
-            if images:
-                # Delete old images from ProductImage, Offer table (keep legacy image_url)
+            valid_images = [img for img in images if img and allowed_file(img.filename)]
+            if valid_images:
+                # Delete old images from ProductImage table
                 ProductImage.query.filter_by(product_id=product.id).delete()
-                for idx, img_file in enumerate(images):
-                    if img_file and allowed_file(img_file.filename):
-                        img_url = save_file(img_file, folder='products')
-                        product_image = ProductImage(
-                            product_id=product.id,
-                            image_url=img_url,
-                            is_main=(idx == 0),
-                            display_order=idx
-                        )
-                        db.session.add(product_image)
+                for idx, img_file in enumerate(valid_images):
+                    img_url = save_file(img_file, folder='products')
+                    product_image = ProductImage(
+                        product_id=product.id,
+                        image_url=img_url,
+                        is_main=(idx == 0),
+                        display_order=idx
+                    )
+                    db.session.add(product_image)
             
             db.session.commit()
             flash('Product updated!', 'success')
