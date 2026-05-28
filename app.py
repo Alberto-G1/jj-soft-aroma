@@ -46,6 +46,15 @@ from routes.customer_routes import customer_bp
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(customer_bp, url_prefix='/')
 
+@app.context_processor
+def inject_admin_globals():
+    """Inject pending orders count into all templates for the admin sidebar badge."""
+    from flask_login import current_user as _cu
+    if _cu and _cu.is_authenticated:
+        from models import Order
+        return {'pending_orders_count': Order.query.filter_by(status='pending').count()}
+    return {}
+
 with app.app_context():
     db.create_all()
 
