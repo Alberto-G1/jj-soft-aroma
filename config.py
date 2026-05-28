@@ -26,3 +26,4 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
     SQLALCHEMY_DATABASE_URI = build_database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    IS_PRODUCTION = os.environ.get("FLASK_ENV") == "production"
