@@ -59,7 +59,19 @@ def products():
     if search:
         query = query.filter(Product.name.ilike(f'%{search}%'))
 
-    all_products = query.order_by(Product.created_at.desc()).all()
+    # Apply sort
+    sort = request.args.get('sort', '')
+    if sort == 'price_asc':
+        query = query.order_by(Product.price.asc())
+    elif sort == 'price_desc':
+        query = query.order_by(Product.price.desc())
+    elif sort == 'newest':
+        query = query.order_by(Product.created_at.desc())
+    else:
+        # Default: featured first, then newest
+        query = query.order_by(Product.is_featured.desc(), Product.created_at.desc())
+
+    all_products = query.all()
     categories   = Category.query.all()
     return render_template('customer/products.html',
         products=all_products,
@@ -78,7 +90,6 @@ def product_detail(id):
 # ─── CART ────────────────────────────────────────────────
 @customer_bp.route('/cart')
 def cart():
-    from models import Review
     cart     = get_cart()
     total    = cart_total(cart)
     featured = []
@@ -107,6 +118,8 @@ def add_to_cart(product_id):
         }
     save_cart(cart)
     flash(f'{product.name} added to cart!', 'success')
+    if request.form.get('buy_now'):
+        return redirect(url_for('customer.checkout'))
     return redirect(request.referrer or url_for('customer.products'))
 
 @customer_bp.route('/cart/remove/<product_id>', methods=['POST'])
