@@ -88,10 +88,7 @@
                autocomplete="off">
       </form>
 
-      <!-- Wishlist icon -->
-      <button class="action-btn" title="Wishlist" style="background:none;border:none;color:var(--text-mid);font-size:1.1rem;cursor:pointer;">
-        <i class="bi bi-heart"></i>
-      </button>
+
 
       <!-- Cart -->
       {% set cart = session.get('cart', {}) %}
@@ -131,7 +128,7 @@
       </a>
       
       <!-- More button for mobile navigation -->
-      <button id="mobileMoreBtn" class="position-relative" style="background:none;border:none;color:var(--navy);font-size:1.3rem;cursor:pointer;padding:0;">
+      <button id="topMobileMenuBtn" class="position-relative" style="background:none;border:none;color:var(--navy);font-size:1.3rem;cursor:pointer;padding:0;">
         <i class="bi bi-list"></i>
       </button>
     </div>
@@ -140,7 +137,7 @@
 </nav>
 
 <!-- Mobile More Dropdown Menu -->
-<div id="mobileMoreDropdown" class="mobile-more-dropdown d-lg-none">
+<div id="topMobileMenuDropdown" class="mobile-more-dropdown d-lg-none">
   <a href="{{ url_for('customer.home') }}" class="bn-dropdown-item {% if request.endpoint == 'customer.home' %}active{% endif %}">
     <i class="bi bi-house"></i> Home
   </a>
