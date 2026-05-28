@@ -155,8 +155,7 @@
                 <button type="submit" class="btn-add-cart" style="flex:1;min-width:160px;" id="addToCartBtn">
                   <i class="bi bi-cart-plus"></i> Add to Cart
                 </button>
-                <button type="button" class="btn-buy-now" style="flex:1;min-width:140px;" id="buyNowBtn"
-                        onclick="document.querySelector('.product-action-form').setAttribute('data-action', 'buy-now'); document.querySelector('.product-action-form').submit();">
+                <button type="submit" name="buy_now" value="1" class="btn-buy-now" style="flex:1;min-width:140px;" id="buyNowBtn">
                   <i class="bi bi-lightning-charge"></i> Buy Now
                 </button>
               </div>
@@ -262,29 +261,6 @@ function changeMainImage(imageSrc, thumbElement) {
   });
   thumbElement.style.borderColor = 'var(--gold)';
 }
-
-// ── PRODUCT ACTION TOASTS ──────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('.product-action-form');
-  if (!form) return;
-  
-  form.addEventListener('submit', (e) => {
-    const productName = form.getAttribute('data-product');
-    const action = form.getAttribute('data-action') || 'add-to-cart';
-    
-    if (action === 'add-to-cart') {
-      e.preventDefault(); // Prevent default to show toast first
-      showToast(`${productName} added to cart!`, 'cart');
-      setTimeout(() => form.submit(), 500);
-    } else if (action === 'buy-now') {
-      e.preventDefault();
-      showToast(`Proceeding to checkout for ${productName}...`, 'success');
-      setTimeout(() => {
-        window.location.href = '{{ url_for("customer.checkout") }}';
-      }, 500);
-    }
-  });
-});
 </script>
 {% endblock %}
 
