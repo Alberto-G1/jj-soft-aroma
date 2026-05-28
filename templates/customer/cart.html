@@ -128,11 +128,7 @@
             <span>UGX {{ "{:,.0f}".format(total) }}</span>
           </div>
 
-          <!-- Promo code -->
-          <div class="d-flex gap-2 mt-3">
-            <input type="text" class="promo-input" placeholder="Promo code…">
-            <button class="btn-apply">Apply</button>
-          </div>
+
 
           <a href="{{ url_for('customer.checkout') }}" class="btn-checkout">
             <i class="bi bi-lock"></i> Proceed to Checkout
