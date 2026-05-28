@@ -37,31 +37,34 @@
   });
 })();
 
-/* ── MOBILE MORE BUTTON DROPDOWN ───────────────────────────── */
+/* ── MOBILE DROPDOWN MENUS ─────────────────────────────────── */
 (function () {
-  const moreBtn = document.getElementById('mobileMoreBtn');
-  const dropdown = document.getElementById('mobileMoreDropdown');
-  if (!moreBtn || !dropdown) return;
+  // Setup a toggle for any btn/dropdown pair
+  function setupDropdown(btnId, dropdownId) {
+    const btn = document.getElementById(btnId);
+    const dropdown = document.getElementById(dropdownId);
+    if (!btn || !dropdown) return;
 
-  // Toggle dropdown on button click
-  moreBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle('open');
-  });
-
-  // Close dropdown when clicking on items
-  dropdown.querySelectorAll('.bn-dropdown-item').forEach(item => {
-    item.addEventListener('click', () => {
-      dropdown.classList.remove('open');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
     });
-  });
 
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!moreBtn.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.classList.remove('open');
-    }
-  });
+    dropdown.querySelectorAll('.bn-dropdown-item').forEach(item => {
+      item.addEventListener('click', () => dropdown.classList.remove('open'));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+  }
+
+  // Top-bar hamburger menu (visible on mobile, above lg)
+  setupDropdown('topMobileMenuBtn', 'topMobileMenuDropdown');
+  // Bottom-nav "More" dropdown
+  setupDropdown('mobileMoreBtn', 'mobileMoreDropdown');
 })();
 
 /* ── FADE-IN ON SCROLL ───────────────────────────────────────── */
